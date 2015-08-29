@@ -9,6 +9,7 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net.Mime;
 using System.Reflection;
 using System.Text;
@@ -32,6 +33,10 @@ namespace Idefav.DbObjects.SQLServer
         {
             get { return "SQLServer"; }
         }
+
+        public string Perfix
+        {
+            get { return "@"; } }
 
         /// <summary>
         /// 连接字符串
@@ -317,51 +322,19 @@ namespace Idefav.DbObjects.SQLServer
         {
             bool result = false;
             List<KeyValuePair<string, object>> primarykeys = new List<KeyValuePair<string, object>>();
+            
             try
             {
-                var classAttribute = typeof(T).GetCustomAttributes(true);
-                var tablenameAttribute = classAttribute.SingleOrDefault(c => c is TableNameAttribute) as TableNameAttribute;
-                string table =
-                    tablenameAttribute != null ? tablenameAttribute.Name : typeof(T).Name;
-                string sql = string.Format(" insert {0} ", table);
-                List<KeyValuePair<string, object>> fields = new List<KeyValuePair<string, object>>();
-                foreach (var propertyInfo in typeof(T).GetProperties())
-                {
-                    var propertyAttributes = propertyInfo.GetCustomAttributes(true);
-
-                    // 是否是数据库自动增长字段
-                    var isAutoIncre = propertyAttributes.Count(c => c is AutoIncrementAttribute) > 0;
-                    var tableField =
-                        propertyAttributes.SingleOrDefault(c => c is TableFieldAttribute) as TableFieldAttribute;
-
-                    // 是否是主键
-                    var isPrimaryKey = propertyAttributes.Count(c => c is PrimaryKeyAttribute) > 0;
-                    if (isPrimaryKey)
-                    {
-                        // 判断是否存在
-                        if (primarykeys.Count(c => c.Key == propertyInfo.Name) <= 0)
-                        {
-                            primarykeys.Add(new KeyValuePair<string, object>(propertyInfo.Name, propertyInfo.GetValue(model, null)));
-                        }
-                    }
-                    if (isAutoIncre)
-                    {
-                        continue;
-                    }
-
-                    string tableFieldName = tableField != null && !string.IsNullOrEmpty(tableField.FieldName) ? tableField.FieldName : propertyInfo.Name;
-                    object tableFieldValue = propertyInfo.GetValue(model, null);
-
-                    KeyValuePair<string, object> kv = new KeyValuePair<string, object>(tableFieldName, tableFieldValue);
-                    fields.Add(kv);
-                }
+                ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
+                string sql = string.Format(" insert {0} ", cti.TableName);
+                
                 // 判断记录是否存在
                 if (!IsExist(model, true))
                 {
-                    string fieldstr = string.Join(",", fields.Select(k => k.Key));
-                    string valuestr = string.Join(",", fields.Select(k => GetParameterName(k.Key)));
+                    string fieldstr = string.Join(",", cti.Fields.Select(k => k.Key));
+                    string valuestr = string.Join(",", cti.Fields.Select(k => GetParameterName(k.Key)));
                     sql += string.Format(" ({0}) values ({1}) ", fieldstr, valuestr);
-                    var parm = fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value));
+                    var parm = cti.Fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value));
                     result = ExceuteSql(sql, transaction, parm.ToArray()) > 0;
                 }
 
@@ -374,6 +347,62 @@ namespace Idefav.DbObjects.SQLServer
         }
 
         /// <summary>
+        /// 修改
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="model"></param>
+        /// <param name="transaction"></param>
+        /// <returns></returns>
+        public bool Update<T>(T model, IDbTransaction transaction = null)
+        {
+            ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
+            if (cti.PrimaryKeys.Count > 0)
+            {
+                string sql = "";
+                sql += "update " + cti.TableName;
+                sql += " set ";
+                string fields = string.Join(",", cti.Fields.Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                var param =
+                    cti.Fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value)).ToList();
+                sql += fields;
+                string where = string.Join(" AND ", cti.PrimaryKeys.Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                var wherep =
+                    cti.PrimaryKeys.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value))
+                        .ToArray();
+                sql += " where ";
+                sql += where;
+                param.AddRange(wherep);
+                return ExceuteSql(sql, transaction, param.ToArray()) > 0;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 删除
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="model"></param>
+        /// <param name="transaction"></param>
+        /// <returns></returns>
+        public bool Delete<T>(T model,IDbTransaction transaction=null)
+        {
+            ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
+            if (cti.PrimaryKeys.Count > 0)
+            {
+                string sql = "delete from " + cti.TableName;
+                sql += " where ";
+                string where = string.Join(" AND ", cti.PrimaryKeys.Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                var parm =
+                    cti.PrimaryKeys.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value))
+                        .ToArray();
+                sql += where;
+                return ExceuteSql(sql, transaction) > 0;
+            }
+            return false;
+
+        }
+
+        /// <summary>
         /// 判断是否插入的记录是否存在
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -382,53 +411,23 @@ namespace Idefav.DbObjects.SQLServer
         /// <returns></returns>
         public bool IsExist<T>(T model, bool ignoreAutoIm = false)
         {
-            List<KeyValuePair<string, object>> primarykeys = new List<KeyValuePair<string, object>>();
-            var classAttribute = typeof(T).GetCustomAttributes(true);
-            var tablenameAttribute = classAttribute.SingleOrDefault(c => c is TableNameAttribute) as TableNameAttribute;
-            string table =
-                tablenameAttribute != null ? tablenameAttribute.Name : typeof(T).Name;
-            foreach (var propertyInfo in typeof(T).GetProperties())
+            ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
+            if (cti.PrimaryKeys.Count > 0)
             {
-                var propertyAttributes = propertyInfo.GetCustomAttributes(true);
-
-                // 是否是数据库自动增长字段
-                var isAutoIncre = propertyAttributes.Count(c => c is AutoIncrementAttribute) > 0;
-                var tableField =
-                    propertyAttributes.SingleOrDefault(c => c is TableFieldAttribute) as TableFieldAttribute;
-
-                // 是否是主键
-                var isPrimaryKey = propertyAttributes.Count(c => c is PrimaryKeyAttribute) > 0;
-                if (isAutoIncre && ignoreAutoIm)
-                {
-                    continue;
-                }
-                if (isPrimaryKey)
-                {
-                    // 判断是否存在
-                    if (primarykeys.Count(c => c.Key == propertyInfo.Name) <= 0)
-                    {
-                        primarykeys.Add(new KeyValuePair<string, object>(propertyInfo.Name, propertyInfo.GetValue(model, null)));
-                    }
-                }
-
-            }
-            if (primarykeys.Count > 0)
-            {
-                string sql = string.Format(" select count(*) from {0} ", table);
+                string sql = string.Format(" select count(*) from {0} ", cti.TableName);
                 sql += " where ";
-                List<KeyValuePair<string, object>> parameters = new List<KeyValuePair<string, object>>();
-                for (int i = 0; i < primarykeys.Count; i++)
+                var filterkeys = cti.PrimaryKeys;
+                if (ignoreAutoIm)
                 {
-                    if (i == primarykeys.Count - 1)
-                    {
-                        sql += string.Format(" {0}={1} ", primarykeys[i].Key, GetParameterName(primarykeys[i].Key));
-                    }
-                    else
-                    {
-                        sql += string.Format(" {0}={1} AND ", primarykeys[i].Key, GetParameterName(primarykeys[i].Key));
-                    }
-                    parameters.Add(new KeyValuePair<string, object>(GetParameterName(primarykeys[i].Key), primarykeys[i].Value));
+                    filterkeys =
+                        cti.PrimaryKeys.Where(k => cti.AutoIncreFields.Count(c => c.Key == k.Key) <= 0).ToList();
                 }
+                List<KeyValuePair<string, object>> parameters = new List<KeyValuePair<string, object>>();
+                string where = string.Join(" AND ", filterkeys.Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                parameters =
+                        filterkeys.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value))
+                            .ToList();
+                sql += where;
 
                 return ((int)ExecuteScalar(sql, parameters.ToArray())) > 0;
             }
@@ -442,7 +441,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <returns></returns>
         public string GetParameterName(string name)
         {
-            return string.Format("@{0}", name);
+            return string.Format("{1}{0}", name,Perfix);
         }
 
         /// <summary>

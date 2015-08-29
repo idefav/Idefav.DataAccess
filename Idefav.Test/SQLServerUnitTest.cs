@@ -1,4 +1,5 @@
 ﻿using System;
+using Idefav.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Idefav.Test
@@ -39,6 +40,32 @@ namespace Idefav.Test
                 return true;
             }),true);
             //Assert.AreEqual(db.Insert(student),true);
+        }
+
+        [TestMethod]
+        public void TestUpdate()
+        {
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            db.DbConnectStr = ConnStr;
+            Student student = new Student();
+            student.ID = 4;
+            student.StudentName = "Student4";
+            student.ClassName = "Class4";
+            student.Score = 30;
+            db.Update(student, t => t.ClassName=="test"&&t.ID==1);
+        }
+
+
+        [TestMethod]
+        public void TestToSQL()
+        {
+            Student student = new Student();
+            student.ID = 4;
+            student.StudentName = "Student4";
+            student.ClassName = "Class4";
+            ExpressionToSQL tosql=new ExpressionToSQL();
+            tosql.ToSQL<Student>(c => c.ID == 1&&c.ClassName=="class1"&&c.Score>(decimal) 10.5&&c.InTime>DateTime.Now);
+           
         }
     }
 }

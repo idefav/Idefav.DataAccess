@@ -23,6 +23,9 @@ namespace Idefav.Test
         public string ClassName { get; set; }
 
         [TableField]
-        public int Score { get; set; }
+        public Decimal? Score { get; set; }
+
+        [TableField]
+        public DateTime InTime { get; set; }
     }
 }

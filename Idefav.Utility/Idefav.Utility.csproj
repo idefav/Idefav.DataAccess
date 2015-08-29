@@ -42,13 +42,17 @@
   <ItemGroup>
     <Compile Include="AutoIncrementAttribute.cs" />
     <Compile Include="Cache.cs" />
+    <Compile Include="ClassTableInfo.cs" />
+    <Compile Include="ClassTableInfoFactory.cs" />
     <Compile Include="CodeCommon.cs" />
     <Compile Include="ColumnInfo.cs" />
     <Compile Include="ConfigHelper.cs" />
     <Compile Include="DatatypeMap.cs" />
+    <Compile Include="ExpressionToSQL.cs" />
     <Compile Include="INIFile.cs" />
     <Compile Include="PrimaryKeyAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResolveExpression.cs" />
     <Compile Include="StringPlus.cs" />
     <Compile Include="TableFieldAttribute.cs" />
     <Compile Include="TableInfo.cs" />
