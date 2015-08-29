@@ -31,5 +31,7 @@ namespace Idefav.IDAL
         object ExecuteScalar(string sql, params KeyValuePair<string, object>[] parameters);
 
         bool Insert<T>(T model, IDbTransaction transaction = null);
+
+        bool IsExist<T>(T model, bool ignoreAutoIm = false);
     }
 }

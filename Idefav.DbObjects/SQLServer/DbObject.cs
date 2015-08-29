@@ -1,4 +1,6 @@
-﻿using System;
+﻿
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -15,6 +17,9 @@ using Idefav.Utility;
 
 namespace Idefav.DbObjects.SQLServer
 {
+    /// <summary>
+    /// SQLServer操作类
+    /// </summary>
     public class DbObject : IDbObject
     {
 
@@ -48,11 +53,30 @@ namespace Idefav.DbObjects.SQLServer
             {
                 cmd.CommandType = CommandType.Text;
                 cmd.CommandText = sql;
-                if (transaction != null)
-                    cmd.Transaction = (SqlTransaction)transaction;
+
                 if (parameters != null)
                     cmd.Parameters.AddRange(MakeParams(parameters).ToArray());
                 return cmd.ExecuteNonQuery();
+            }, transaction);
+        }
+
+        public bool ExceuteTrans(Func<IDbTransaction, bool> proc)
+        {
+            return DbConnect(conn =>
+            {
+                SqlTransaction transaction = conn.BeginTransaction();
+                try
+                {
+                    proc(transaction);
+                    transaction.Commit();
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+
             });
         }
 
@@ -71,16 +95,35 @@ namespace Idefav.DbObjects.SQLServer
             }
         }
 
-        public T DbExcute<T>(Func<SqlCommand, T> proc)
+        /// <summary>
+        /// 执行Command
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="proc"></param>
+        /// <param name="transaction"></param>
+        /// <returns></returns>
+        public T DbExcute<T>(Func<SqlCommand, T> proc, IDbTransaction transaction = null)
         {
-            return DbConnect(conn =>
+            if (transaction != null)
             {
-                using (SqlCommand cmd = new SqlCommand())
+                using (SqlCommand cmd = (SqlCommand)transaction.Connection.CreateCommand())
                 {
-                    cmd.Connection = conn;
+                    cmd.Transaction = (SqlTransaction)transaction;
                     return proc(cmd);
                 }
-            });
+            }
+            else
+            {
+                return DbConnect(conn =>
+                {
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        return proc(cmd);
+                    }
+                });
+            }
+
         }
 
         public DataSet Query(string SQLString, params KeyValuePair<string, object>[] parameters)
@@ -150,6 +193,13 @@ namespace Idefav.DbObjects.SQLServer
             });
         }
 
+        /// <summary>
+        /// 获取数据返回数据模型
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         public T QueryModel<T>(string sql, params KeyValuePair<string, object>[] parameters) where T : class, new()
         {
             T model = new T();
@@ -172,6 +222,12 @@ namespace Idefav.DbObjects.SQLServer
             return model;
         }
 
+        /// <summary>
+        /// 使用DataReader获取数据
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         public IDataReader QueryDataReader(string sql, params KeyValuePair<string, object>[] parameters)
         {
             SqlConnection connection = new SqlConnection(DbConnectStr);
@@ -188,6 +244,16 @@ namespace Idefav.DbObjects.SQLServer
             return cmd.ExecuteReader(CommandBehavior.CloseConnection);
         }
 
+        /// <summary>
+        /// 分页查询
+        /// </summary>
+        /// <param name="sqlstr">SQL语句</param>
+        /// <param name="pageNo">页码</param>
+        /// <param name="pageSize">每页记录数</param>
+        /// <param name="orderby">排序字段(如:ID,NAME DESC)</param>
+        /// <param name="select">筛选</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select,
             params KeyValuePair<string, object>[] parameters)
         {
@@ -215,9 +281,15 @@ namespace Idefav.DbObjects.SQLServer
                 adp.Fill(ds);
                 return ds.Tables[0];
             });
-
         }
 
+        /// <summary>
+        /// 插入
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="model"></param>
+        /// <param name="transaction">事务</param>
+        /// <returns></returns>
         public bool Insert<T>(T model, IDbTransaction transaction = null)
         {
             bool result = false;
@@ -241,10 +313,6 @@ namespace Idefav.DbObjects.SQLServer
 
                     // 是否是主键
                     var isPrimaryKey = propertyAttributes.Count(c => c is PrimaryKeyAttribute) > 0;
-                    if (isAutoIncre && !isPrimaryKey)
-                    {
-                        continue;
-                    }
                     if (isPrimaryKey)
                     {
                         // 判断是否存在
@@ -253,17 +321,27 @@ namespace Idefav.DbObjects.SQLServer
                             primarykeys.Add(new KeyValuePair<string, object>(propertyInfo.Name, propertyInfo.GetValue(model, null)));
                         }
                     }
-                    string tableFieldName = tableField != null ? tableField.FieldName : propertyInfo.Name;
+                    if (isAutoIncre)
+                    {
+                        continue;
+                    }
+
+                    string tableFieldName = tableField != null && !string.IsNullOrEmpty(tableField.FieldName) ? tableField.FieldName : propertyInfo.Name;
                     object tableFieldValue = propertyInfo.GetValue(model, null);
 
                     KeyValuePair<string, object> kv = new KeyValuePair<string, object>(tableFieldName, tableFieldValue);
                     fields.Add(kv);
                 }
-                string fieldstr = string.Join(",", fields.Select(k => k.Key));
-                string valuestr = string.Join(",", fields.Select(k => GetParameterName(k.Key)));
-                sql += string.Format(" ({0}) values ({1}) ", fieldstr, valuestr);
-                var parm = fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value));
-                result = ExceuteSql(sql, transaction, parm.ToArray()) > 0;
+                // 判断记录是否存在
+                if (!IsExist(model, true))
+                {
+                    string fieldstr = string.Join(",", fields.Select(k => k.Key));
+                    string valuestr = string.Join(",", fields.Select(k => GetParameterName(k.Key)));
+                    sql += string.Format(" ({0}) values ({1}) ", fieldstr, valuestr);
+                    var parm = fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value));
+                    result = ExceuteSql(sql, transaction, parm.ToArray()) > 0;
+                }
+
             }
             catch (Exception e)
             {
@@ -272,11 +350,83 @@ namespace Idefav.DbObjects.SQLServer
             return result;
         }
 
+        /// <summary>
+        /// 判断是否插入的记录是否存在
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="model"></param>
+        /// <param name="ignoreAutoIm">忽略自动增长主键</param>
+        /// <returns></returns>
+        public bool IsExist<T>(T model, bool ignoreAutoIm = false)
+        {
+            List<KeyValuePair<string, object>> primarykeys = new List<KeyValuePair<string, object>>();
+            var classAttribute = typeof(T).GetCustomAttributes(true);
+            var tablenameAttribute = classAttribute.SingleOrDefault(c => c is TableNameAttribute) as TableNameAttribute;
+            string table =
+                tablenameAttribute != null ? tablenameAttribute.Name : typeof(T).Name;
+            foreach (var propertyInfo in typeof(T).GetProperties())
+            {
+                var propertyAttributes = propertyInfo.GetCustomAttributes(true);
+
+                // 是否是数据库自动增长字段
+                var isAutoIncre = propertyAttributes.Count(c => c is AutoIncrementAttribute) > 0;
+                var tableField =
+                    propertyAttributes.SingleOrDefault(c => c is TableFieldAttribute) as TableFieldAttribute;
+
+                // 是否是主键
+                var isPrimaryKey = propertyAttributes.Count(c => c is PrimaryKeyAttribute) > 0;
+                if (isAutoIncre && ignoreAutoIm)
+                {
+                    continue;
+                }
+                if (isPrimaryKey)
+                {
+                    // 判断是否存在
+                    if (primarykeys.Count(c => c.Key == propertyInfo.Name) <= 0)
+                    {
+                        primarykeys.Add(new KeyValuePair<string, object>(propertyInfo.Name, propertyInfo.GetValue(model, null)));
+                    }
+                }
+
+            }
+            if (primarykeys.Count > 0)
+            {
+                string sql = string.Format(" select count(*) from {0} ", table);
+                sql += " where ";
+                List<KeyValuePair<string, object>> parameters = new List<KeyValuePair<string, object>>();
+                for (int i = 0; i < primarykeys.Count; i++)
+                {
+                    if (i == primarykeys.Count - 1)
+                    {
+                        sql += string.Format(" {0}={1} ", primarykeys[i].Key, GetParameterName(primarykeys[i].Key));
+                    }
+                    else
+                    {
+                        sql += string.Format(" {0}={1} AND ", primarykeys[i].Key, GetParameterName(primarykeys[i].Key));
+                    }
+                    parameters.Add(new KeyValuePair<string, object>(GetParameterName(primarykeys[i].Key), primarykeys[i].Value));
+                }
+
+                return ((int)ExecuteScalar(sql, parameters.ToArray())) > 0;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 获取数据库参数名称
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public string GetParameterName(string name)
         {
             return string.Format("@{0}", name);
         }
 
+        /// <summary>
+        /// 参数装换
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         private List<SqlParameter> MakeParams(KeyValuePair<string, object>[] parameters)
         {
             List<SqlParameter> listParameters = new List<SqlParameter>();
