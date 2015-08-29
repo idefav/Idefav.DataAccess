@@ -25,11 +25,17 @@ namespace Idefav.DbObjects.SQLServer
 
         private string _dbconnectStr;
 
+        /// <summary>
+        /// 数据库类型
+        /// </summary>
         public string DbType
         {
             get { return "SQLServer"; }
         }
 
+        /// <summary>
+        /// 连接字符串
+        /// </summary>
         public string DbConnectStr
         {
             get
@@ -42,11 +48,23 @@ namespace Idefav.DbObjects.SQLServer
             }
         }
 
+        /// <summary>
+        /// 执行SQL语句
+        /// </summary>
+        /// <param name="SQLString"></param>
+        /// <returns></returns>
         public int ExecuteSql(string SQLString)
         {
             return ExceuteSql(SQLString, null);
         }
 
+        /// <summary>
+        /// 执行SQL 支持事务提交
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="transaction"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         public int ExceuteSql(string sql, IDbTransaction transaction = null, params KeyValuePair<string, object>[] parameters)
         {
             return DbExcute(cmd =>
@@ -60,6 +78,11 @@ namespace Idefav.DbObjects.SQLServer
             }, transaction);
         }
 
+        /// <summary>
+        /// 执行事务
+        /// </summary>
+        /// <param name="proc"></param>
+        /// <returns></returns>
         public bool ExceuteTrans(Func<IDbTransaction, bool> proc)
         {
             return DbConnect(conn =>
