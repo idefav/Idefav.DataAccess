@@ -20,7 +20,7 @@ namespace Idefav.IDAL
         DataSet Query(string SQLString,params KeyValuePair<string,object>[] parameters);
 
         DataTable QueryDataTable(string sql,params KeyValuePair<string,object>[] parameters);
-
+        IDataReader QueryDataReader(string sql, params KeyValuePair<string, object>[] parameters);
         DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select,params KeyValuePair<string,object>[] parameters);
 
         string GetParameterName(string name);
@@ -31,6 +31,10 @@ namespace Idefav.IDAL
         object ExecuteScalar(string sql, params KeyValuePair<string, object>[] parameters);
 
         bool Insert<T>(T model, IDbTransaction transaction = null);
+
+        bool Update<T>(T model, IDbTransaction transaction = null);
+
+        bool Delete<T>(T model, IDbTransaction transaction = null);
 
         bool IsExist<T>(T model, bool ignoreAutoIm = false);
     }

@@ -25,7 +25,7 @@ namespace Idefav.Test
         [TableField]
         public Decimal? Score { get; set; }
 
-        [TableField]
+        [TableField("InDate")]
         public DateTime InTime { get; set; }
     }
 }

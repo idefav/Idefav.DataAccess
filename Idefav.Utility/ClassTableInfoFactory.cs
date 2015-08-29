@@ -43,6 +43,7 @@ namespace Idefav.Utility
                 {
                     cti.AutoIncreFields.Add(new KeyValuePair<string, object>(propertyInfo.Name,
                         propertyInfo.GetValue(model, null)));
+                    continue;
                 }
 
                 string tableFieldName = tableField != null && !string.IsNullOrEmpty(tableField.FieldName)

@@ -36,7 +36,8 @@ namespace Idefav.DbObjects.SQLServer
 
         public string Perfix
         {
-            get { return "@"; } }
+            get { return "@"; }
+        }
 
         /// <summary>
         /// 连接字符串
@@ -95,14 +96,14 @@ namespace Idefav.DbObjects.SQLServer
                 SqlTransaction transaction = conn.BeginTransaction();
                 try
                 {
-                    proc(transaction);
+                    bool result= proc(transaction);
                     transaction.Commit();
-                    return true;
+                    return result;
                 }
                 catch (Exception e)
                 {
                     transaction.Rollback();
-                    return false;
+                    throw e;
                 }
 
             });
@@ -322,27 +323,21 @@ namespace Idefav.DbObjects.SQLServer
         {
             bool result = false;
             List<KeyValuePair<string, object>> primarykeys = new List<KeyValuePair<string, object>>();
-            
-            try
-            {
-                ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
-                string sql = string.Format(" insert {0} ", cti.TableName);
-                
-                // 判断记录是否存在
-                if (!IsExist(model, true))
-                {
-                    string fieldstr = string.Join(",", cti.Fields.Select(k => k.Key));
-                    string valuestr = string.Join(",", cti.Fields.Select(k => GetParameterName(k.Key)));
-                    sql += string.Format(" ({0}) values ({1}) ", fieldstr, valuestr);
-                    var parm = cti.Fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value));
-                    result = ExceuteSql(sql, transaction, parm.ToArray()) > 0;
-                }
 
-            }
-            catch (Exception e)
+
+            ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
+            string sql = string.Format(" insert {0} ", cti.TableName);
+
+            // 判断记录是否存在
+            if (!IsExist(model, true))
             {
-                result = false;
+                string fieldstr = string.Join(",", cti.Fields.Select(k => k.Key));
+                string valuestr = string.Join(",", cti.Fields.Select(k => GetParameterName(k.Key)));
+                sql += string.Format(" ({0}) values ({1}) ", fieldstr, valuestr);
+                var parm = cti.Fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value));
+                result = ExceuteSql(sql, transaction, parm.ToArray()) > 0;
             }
+
             return result;
         }
 
@@ -384,7 +379,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="model"></param>
         /// <param name="transaction"></param>
         /// <returns></returns>
-        public bool Delete<T>(T model,IDbTransaction transaction=null)
+        public bool Delete<T>(T model, IDbTransaction transaction = null)
         {
             ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
             if (cti.PrimaryKeys.Count > 0)
@@ -396,7 +391,7 @@ namespace Idefav.DbObjects.SQLServer
                     cti.PrimaryKeys.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value))
                         .ToArray();
                 sql += where;
-                return ExceuteSql(sql, transaction) > 0;
+                return ExceuteSql(sql, transaction,parm.ToArray()) > 0;
             }
             return false;
 
@@ -422,14 +417,22 @@ namespace Idefav.DbObjects.SQLServer
                     filterkeys =
                         cti.PrimaryKeys.Where(k => cti.AutoIncreFields.Count(c => c.Key == k.Key) <= 0).ToList();
                 }
-                List<KeyValuePair<string, object>> parameters = new List<KeyValuePair<string, object>>();
-                string where = string.Join(" AND ", filterkeys.Select(k => k.Key + "=" + GetParameterName(k.Key)));
-                parameters =
-                        filterkeys.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value))
-                            .ToList();
-                sql += where;
+                if (filterkeys.Count > 0)
+                {
+                    List<KeyValuePair<string, object>> parameters = new List<KeyValuePair<string, object>>();
+                    string where = string.Join(" AND ", filterkeys.Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                    parameters =
+                            filterkeys.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value))
+                                .ToList();
+                    sql += where;
 
-                return ((int)ExecuteScalar(sql, parameters.ToArray())) > 0;
+                    return ((int)ExecuteScalar(sql, parameters.ToArray())) > 0;
+                }
+                else
+                {
+                    return false;
+                }
+
             }
             return false;
         }
@@ -441,7 +444,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <returns></returns>
         public string GetParameterName(string name)
         {
-            return string.Format("{1}{0}", name,Perfix);
+            return string.Format("{1}{0}", name, Perfix);
         }
 
         /// <summary>

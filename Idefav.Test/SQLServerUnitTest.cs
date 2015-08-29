@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Idefav.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -27,11 +28,13 @@ namespace Idefav.Test
             student.StudentName = "Student4";
             student.ClassName = "Class4";
             student.Score = 30;
+            student.InTime=DateTime.Now;
             Student stu2=new Student();
             stu2.ID = 4; 
             stu2.StudentName = "stu5";
             stu2.ClassName = "Class5";
             stu2.Score = 40;
+            stu2.InTime = DateTime.Now;
             Assert.AreEqual(db.ExceuteTrans(trans =>
             {
                 db.Insert(student, trans);
@@ -47,12 +50,14 @@ namespace Idefav.Test
         {
             DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
             db.DbConnectStr = ConnStr;
-            Student student = new Student();
-            student.ID = 4;
-            student.StudentName = "Student4";
-            student.ClassName = "Class4";
+            Student student = db.QueryModel<Student>("select * from td_student where id=" + db.GetParameterName("id"),
+                new KeyValuePair<string, object>(db.GetParameterName("id"), 6));
+            student.ID =6;
+            student.StudentName = "Studentfsafasfasf";
+            student.ClassName = "Class4sfasdfas";
+            student.InTime=DateTime.Now;
             student.Score = 30;
-            db.Update(student, t => t.ClassName=="test"&&t.ID==1);
+            db.Update(student);
         }
 
 
@@ -66,6 +71,25 @@ namespace Idefav.Test
             ExpressionToSQL tosql=new ExpressionToSQL();
             tosql.ToSQL<Student>(c => c.ID == 1&&c.ClassName=="class1"&&c.Score>(decimal) 10.5&&c.InTime>DateTime.Now);
            
+        }
+
+        [TestMethod]
+        public void TestDelete()
+        {
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            db.DbConnectStr = ConnStr;
+            Student student=new Student();
+            student.ID = 6;
+            Assert.AreEqual(db.Delete(student),true);
+        }
+
+        [TestMethod]
+        public void TestQueryModels()
+        {
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            db.DbConnectStr = ConnStr;
+            var models = db.QueryModels<Student>("select * from td_student");
+            Assert.AreEqual(models.Count>0 ,true);
         }
     }
 }

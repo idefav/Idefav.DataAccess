@@ -10,6 +10,9 @@ namespace Idefav.Utility
         public ClassTableInfo(string parameterPerfix)
         {
             ParameterPerfix = parameterPerfix;
+            AutoIncreFields=new List<KeyValuePair<string, object>>();
+            Fields=new List<KeyValuePair<string, object>>();
+            PrimaryKeys=new List<KeyValuePair<string, object>>();
         }
 
         public string ParameterPerfix { get; set; }
