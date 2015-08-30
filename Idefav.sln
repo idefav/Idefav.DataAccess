@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Idefav.DbFactory", "Idefav.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Idefav.Test", "Idefav.Test\Idefav.Test.csproj", "{3CA4D3D0-FA2B-4AB8-813B-F82540E2B1DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpressionTest", "ExpressionTest\ExpressionTest.csproj", "{BCB5246C-6FA8-42EF-9996-E42984591662}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{3CA4D3D0-FA2B-4AB8-813B-F82540E2B1DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3CA4D3D0-FA2B-4AB8-813B-F82540E2B1DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3CA4D3D0-FA2B-4AB8-813B-F82540E2B1DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCB5246C-6FA8-42EF-9996-E42984591662}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCB5246C-6FA8-42EF-9996-E42984591662}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCB5246C-6FA8-42EF-9996-E42984591662}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCB5246C-6FA8-42EF-9996-E42984591662}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
