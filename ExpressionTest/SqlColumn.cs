@@ -103,17 +103,17 @@ namespace ExpressionTest
             this.sqlType = sqlType;
         }
 
-        internal SqlColumn(string name, SqlExpression expr) : base(name,expr)
-        {
-            Type clrType = expr.ClrType;
-            ProviderType sqlType = expr.SqlType;
-            string name1 = name;
-            // ISSUE: variable of the null type
+        //internal SqlColumn(string name, SqlExpression expr)
+        //{
+        //    Type clrType = expr.ClrType;
+        //    ProviderType sqlType = expr.SqlType;
+        //    string name1 = name;
+        //    // ISSUE: variable of the null type
             
-            SqlExpression expr1 = expr;
-            System.Linq.Expressions.Expression sourceExpression = expr1.SourceExpression;
-            // ISSUE: explicit constructor call
+        //    SqlExpression expr1 = expr;
+        //    System.Linq.Expressions.Expression sourceExpression = expr1.SourceExpression;
+        //    // ISSUE: explicit constructor call
            
-        }
+        //}
     }
 }

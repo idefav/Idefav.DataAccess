@@ -88,4 +88,10 @@ namespace ExpressionTest
             return base.GetHashCode();
         }
     }
+
+    internal enum QueryFormatOptions
+    {
+        None = 0,
+        SuppressSize = 1,
+    }
 }

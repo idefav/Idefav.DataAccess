@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DbFormatter.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="MappingSource.cs" />
     <Compile Include="MetaAccessor.cs" />
@@ -58,10 +59,14 @@
     <Compile Include="SqlColumn.cs" />
     <Compile Include="SqlColumnRef.cs" />
     <Compile Include="SqlExpression.cs" />
+    <Compile Include="SqlFormatter.cs" />
+    <Compile Include="SqlIdentifier.cs" />
     <Compile Include="SqlNode.cs" />
     <Compile Include="SqlNodeType.cs" />
+    <Compile Include="SqlNop.cs" />
     <Compile Include="SqlOrderExpression.cs" />
     <Compile Include="SqlRow.cs" />
+    <Compile Include="SqlRowNumber.cs" />
     <Compile Include="SqlSelect.cs" />
     <Compile Include="SqlSimpleTypeExpression.cs" />
     <Compile Include="SqlSource.cs" />

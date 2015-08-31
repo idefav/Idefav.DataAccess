@@ -91,5 +91,11 @@ namespace Idefav.Test
             var models = db.QueryModels<Student>("select * from td_student");
             Assert.AreEqual(models.Count>0 ,true);
         }
+
+        [TestMethod]
+        public void TestExpression()
+        {
+            
+        }
     }
 }
