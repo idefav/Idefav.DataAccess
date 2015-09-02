@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -89,7 +90,7 @@ namespace ExpressionTest
             }
         }
 
-        internal SqlColumn(Type clrType, ProviderType sqlType, string name, MetaDataMember member, SqlExpression expr, System.Linq.Expressions.Expression sourceExpression)
+        internal SqlColumn(Type clrType, ProviderType sqlType, string name, MetaDataMember member, SqlExpression expr, Expression sourceExpression)
           : base(SqlNodeType.Column, clrType, sourceExpression)
         {
             if (typeof(Type).IsAssignableFrom(clrType))
@@ -103,17 +104,18 @@ namespace ExpressionTest
             this.sqlType = sqlType;
         }
 
-        //internal SqlColumn(string name, SqlExpression expr)
-        //{
-        //    Type clrType = expr.ClrType;
-        //    ProviderType sqlType = expr.SqlType;
-        //    string name1 = name;
-        //    // ISSUE: variable of the null type
+        internal SqlColumn(string name, SqlExpression expr):base(SqlNodeType.Column, expr.ClrType,expr.SourceExpression)
+        {
+            Type clrType = expr.ClrType;
+            ProviderType sqlType = expr.SqlType;
+            string name1 = name;
+            // ISSUE: variable of the null type
             
-        //    SqlExpression expr1 = expr;
-        //    System.Linq.Expressions.Expression sourceExpression = expr1.SourceExpression;
-        //    // ISSUE: explicit constructor call
-           
-        //}
+            SqlExpression expr1 = expr;
+            Expression sourceExpression = expr1.SourceExpression;
+            // ISSUE: explicit constructor call
+           // this.base(clrType, sqlType, name1, (MetaDataMember)null, expr1, sourceExpression);
+
+        }
     }
 }
