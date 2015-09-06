@@ -75,12 +75,13 @@ namespace Idefav.DbObjects.SQLServer
         {
             return DbExcute(cmd =>
             {
-                cmd.CommandType = CommandType.Text;
-                cmd.CommandText = sql;
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+                sqlcmd.CommandText = sql;
 
                 if (parameters != null)
-                    cmd.Parameters.AddRange(MakeParams(parameters).ToArray());
-                return cmd.ExecuteNonQuery();
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                return sqlcmd.ExecuteNonQuery();
             }, transaction);
         }
 
@@ -93,10 +94,11 @@ namespace Idefav.DbObjects.SQLServer
         {
             return DbConnect(conn =>
             {
-                SqlTransaction transaction = conn.BeginTransaction();
+
+                SqlTransaction transaction = (conn as SqlConnection).BeginTransaction();
                 try
                 {
-                    bool result= proc(transaction);
+                    bool result = proc(transaction);
                     transaction.Commit();
                     return result;
                 }
@@ -115,7 +117,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <typeparam name="T"></typeparam>
         /// <param name="proc"></param>
         /// <returns></returns>
-        public T DbConnect<T>(Func<SqlConnection, T> proc)
+        public T DbConnect<T>(Func<IDbConnection, T> proc)
         {
             using (SqlConnection connection = new SqlConnection(DbConnectStr))
             {
@@ -131,7 +133,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="proc"></param>
         /// <param name="transaction"></param>
         /// <returns></returns>
-        public T DbExcute<T>(Func<SqlCommand, T> proc, IDbTransaction transaction = null)
+        public T DbExcute<T>(Func<IDbCommand, T> proc, IDbTransaction transaction = null)
         {
             if (transaction != null)
             {
@@ -147,7 +149,7 @@ namespace Idefav.DbObjects.SQLServer
                 {
                     using (SqlCommand cmd = new SqlCommand())
                     {
-                        cmd.Connection = conn;
+                        cmd.Connection = conn as SqlConnection;
                         return proc(cmd);
                     }
                 });
@@ -159,11 +161,12 @@ namespace Idefav.DbObjects.SQLServer
         {
             return DbExcute(cmd =>
             {
-                cmd.CommandType = CommandType.Text;
-                cmd.CommandText = SQLString;
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+                sqlcmd.CommandText = SQLString;
                 if (parameters != null)
-                    cmd.Parameters.AddRange(MakeParams(parameters).ToArray());
-                SqlDataAdapter adp = new SqlDataAdapter(cmd);
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
                 adp.Fill(ds);
                 return ds;
@@ -174,11 +177,12 @@ namespace Idefav.DbObjects.SQLServer
         {
             return DbExcute(cmd =>
             {
-                cmd.CommandType = CommandType.Text;
-                cmd.CommandText = sql;
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+                sqlcmd.CommandText = sql;
                 if (parameters != null)
-                    cmd.Parameters.AddRange(MakeParams(parameters).ToArray());
-                SqlDataAdapter adp = new SqlDataAdapter(cmd);
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
                 adp.Fill(ds);
                 return ds.Tables[0];
@@ -211,14 +215,15 @@ namespace Idefav.DbObjects.SQLServer
         {
             return DbExcute(cmd =>
             {
-                cmd.CommandType = CommandType.Text;
-                cmd.CommandText = sql;
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+                sqlcmd.CommandText = sql;
                 if (parameters != null)
                 {
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.Clear();
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
                 }
-                return cmd.ExecuteScalar();
+                return sqlcmd.ExecuteScalar();
             });
         }
 
@@ -281,6 +286,52 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="pageSize">每页记录数</param>
         /// <param name="orderby">排序字段(如:ID,NAME DESC)</param>
         /// <param name="select">筛选</param>
+        /// <param name="count"></param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select,out int count,
+            params KeyValuePair<string, object>[] parameters)
+        {
+            StringBuilder qSql = new StringBuilder();
+            StringBuilder sql = new StringBuilder();
+            int startIndex = (pageNo - 1) * pageSize + 1; //开始
+            int endIndex = pageNo * pageSize;
+            sql.Append(" WITH TB1 as (" + sqlstr + "), ");
+            sql.Append(" TB2 as(SELECT ROW_NUMBER() OVER(ORDER BY " + orderby + ") AS RN,* FROM TB1) ");
+            sql.Append(" SELECT " + select + " FROM  TB2 ");
+            sql.Append(" WHERE RN >= " + startIndex + " AND RN<= " + endIndex + " ");
+            sql.Append(" ORDER BY " + orderby + " ");
+
+            count = GetCount(sqlstr, parameters);
+            qSql.Append(string.Format(sql.ToString(), sqlstr));
+
+            return DbExcute(cmd =>
+            {
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+
+                sqlcmd.CommandText = qSql.ToString();
+                if (parameters != null)
+                {
+                    sqlcmd.Parameters.Clear();
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                }
+                SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
+                DataSet ds = new DataSet();
+                adp.Fill(ds);
+                return ds.Tables[0];
+            });
+        }
+
+        /// <summary>
+        /// 分页查询
+        /// </summary>
+        /// <param name="sqlstr">SQL语句</param>
+        /// <param name="pageNo">页码</param>
+        /// <param name="pageSize">每页记录数</param>
+        /// <param name="orderby">排序字段(如:ID,NAME DESC)</param>
+        /// <param name="select">筛选</param>
+        /// <param name="count"></param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select,
@@ -295,20 +346,42 @@ namespace Idefav.DbObjects.SQLServer
             sql.Append(" SELECT " + select + " FROM  TB2 ");
             sql.Append(" WHERE RN >= " + startIndex + " AND RN<= " + endIndex + " ");
             sql.Append(" ORDER BY " + orderby + " ");
+
+            
             qSql.Append(string.Format(sql.ToString(), sqlstr));
+
             return DbExcute(cmd =>
             {
-                cmd.CommandType = CommandType.Text;
-                cmd.CommandText = qSql.ToString();
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+
+                sqlcmd.CommandText = qSql.ToString();
                 if (parameters != null)
                 {
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.Clear();
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
                 }
-                SqlDataAdapter adp = new SqlDataAdapter(cmd);
+                SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
                 adp.Fill(ds);
                 return ds.Tables[0];
+            });
+        }
+
+        public int GetCount(string sql, params KeyValuePair<string, object>[] parameters)
+        {
+            string sqlcount = @"WITH TB1 as (" + sql + ") select COUNT(*) from TB1";
+            return DbExcute(cmd =>
+            {
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+                sqlcmd.CommandText = sqlcount;
+                if (parameters != null)
+                {
+                    sqlcmd.Parameters.Clear();
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                }
+                return int.Parse(sqlcmd.ExecuteScalar().ToString());
             });
         }
 
@@ -339,6 +412,22 @@ namespace Idefav.DbObjects.SQLServer
             }
 
             return result;
+        }
+
+        public bool Insert<T>(T model, string where, IDbTransaction transaction = null,
+            params KeyValuePair<string, object>[] parameters)
+        {
+            ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
+            string sql = string.Format(" insert {0} ", cti.TableName);
+            if (!IsExist(where, cti.TableName, parameters))
+            {
+                string fieldstr = string.Join(",", cti.Fields.Select(k => k.Key));
+                string valuestr = string.Join(",", cti.Fields.Select(k => GetParameterName(k.Key)));
+                sql += string.Format(" ({0}) values ({1}) ", fieldstr, valuestr);
+                var parm = cti.Fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value));
+                return ExceuteSql(sql, transaction, parm.ToArray()) > 0;
+            }
+            return false;
         }
 
         /// <summary>
@@ -372,6 +461,29 @@ namespace Idefav.DbObjects.SQLServer
             return false;
         }
 
+        public bool Update(string fields, string where, string tableName, IDbTransaction transaction = null,
+            params KeyValuePair<string, object>[] parameters)
+        {
+
+            string sql = "";
+            sql += "update " + tableName;
+            sql += " set ";
+            if (string.IsNullOrEmpty(fields))
+            {
+                return false;
+            }
+            sql += fields;
+            if (string.IsNullOrEmpty(where))
+            {
+                return false;
+
+            }
+
+            sql += " " + where;
+
+            return ExceuteSql(sql, transaction, parameters) > 0;
+        }
+
         /// <summary>
         /// 删除
         /// </summary>
@@ -391,10 +503,17 @@ namespace Idefav.DbObjects.SQLServer
                     cti.PrimaryKeys.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value))
                         .ToArray();
                 sql += where;
-                return ExceuteSql(sql, transaction,parm.ToArray()) > 0;
+                return ExceuteSql(sql, transaction, parm.ToArray()) > 0;
             }
             return false;
 
+        }
+
+        public bool Delete(string where, string tableName, IDbTransaction transaction = null, params KeyValuePair<string, object>[] parameters)
+        {
+            string sql = "delete from " + tableName + " ";
+            sql += " " + where + " ";
+            return ExceuteSql(sql, transaction, parameters) > 0;
         }
 
         /// <summary>
@@ -438,6 +557,21 @@ namespace Idefav.DbObjects.SQLServer
         }
 
         /// <summary>
+        /// 判断记录是否存在
+        /// </summary>
+        /// <param name="where"></param>
+        /// <param name="tableName"></param>
+        /// <param name="kv"></param>
+        /// <returns></returns>
+        public bool IsExist(string where, string tableName, params KeyValuePair<string, object>[] kv)
+        {
+            string sql = string.Format(" select count(*) from {0} ", tableName);
+            sql += where;
+            return (int)ExecuteScalar(sql, kv) > 0;
+
+        }
+
+        /// <summary>
         /// 获取数据库参数名称
         /// </summary>
         /// <param name="name"></param>
@@ -452,9 +586,9 @@ namespace Idefav.DbObjects.SQLServer
         /// </summary>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        private List<SqlParameter> MakeParams(KeyValuePair<string, object>[] parameters)
+        public List<IDbDataParameter> MakeParams(KeyValuePair<string, object>[] parameters)
         {
-            List<SqlParameter> listParameters = new List<SqlParameter>();
+            List<IDbDataParameter> listParameters = new List<IDbDataParameter>();
             if (parameters != null)
             {
                 foreach (var kv in parameters)

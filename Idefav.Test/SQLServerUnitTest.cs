@@ -8,7 +8,7 @@ namespace Idefav.Test
     [TestClass]
     public class SQLServerUnitTest
     {
-        private string ConnStr = @"Data Source=.\SQL2012;Initial Catalog=DBTest;User Id=sa;Password=sa123;";
+        private string ConnStr = @"Data Source=.\SQL2008EX;Initial Catalog=DBTest;User Id=sa;Password=sa123;";
         [TestMethod]
         public void TestIsExist()
         {
@@ -60,6 +60,15 @@ namespace Idefav.Test
             db.Update(student);
         }
 
+        [TestMethod]
+        public void TestUpate2()
+        {
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            db.DbConnectStr = ConnStr;
+
+            db.Update("sore="+db.GetParameterName("sore"), "where sore>=100", "students", null,new KeyValuePair<string, object>(db.GetParameterName("sore"),50));
+        }
+
 
         [TestMethod]
         public void TestToSQL()
@@ -81,6 +90,15 @@ namespace Idefav.Test
             Student student=new Student();
             student.ID = 6;
             Assert.AreEqual(db.Delete(student),true);
+        }
+
+        [TestMethod]
+        public void TestDelete2()
+        {
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            db.DbConnectStr = ConnStr;
+            Assert.AreEqual(db.Delete("where sore<" + db.GetParameterName("sore"), "students", null,
+                new KeyValuePair<string, object>(db.GetParameterName("sore"), 50)),true);
         }
 
         [TestMethod]

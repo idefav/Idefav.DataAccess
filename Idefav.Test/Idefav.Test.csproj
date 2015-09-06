@@ -52,11 +52,16 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="OracleTest.cs" />
     <Compile Include="SQLServerUnitTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Student.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Idefav.DbFactory\Idefav.DbFactory.csproj">
+      <Project>{27542c45-1077-46ac-8861-caa0f31ed516}</Project>
+      <Name>Idefav.DbFactory</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Idefav.DbObjects\Idefav.DbObjects.csproj">
       <Project>{71fdc4c1-db29-4d4c-8d60-9463dd9c5ac0}</Project>
       <Name>Idefav.DbObjects</Name>

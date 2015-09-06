@@ -16,6 +16,7 @@ namespace Idefav.Test
         [TableField]
         public int ID { get; set; }
 
+        [PrimaryKey]
         [TableField]
         public string StudentName { get; set; }
 
