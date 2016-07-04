@@ -12,15 +12,16 @@ namespace Idefav.DbFactory
     {
         private static Cache cache = new Cache();
 
-        private static object CreateObject(string path, string TypeName)
+        private static object CreateObject(string path, string TypeName,string connStr)
         {
-            object obj = DBOMaker.cache.GetObject((object)TypeName);
+            var cacheKey = TypeName + "_" + connStr;
+            object obj = DBOMaker.cache.GetObject((object)cacheKey);
             if (obj == null)
             {
                 try
                 {
-                    obj = Assembly.Load(path).CreateInstance(TypeName);
-                    DBOMaker.cache.SaveCache((object)TypeName, obj);
+                    obj = Assembly.Load(path).CreateInstance(TypeName,true,BindingFlags.Default,null,new object[]{connStr},null,null );
+                    DBOMaker.cache.SaveCache((object)cacheKey, obj);
                 }
                 catch (Exception ex)
                 {
@@ -30,11 +31,15 @@ namespace Idefav.DbFactory
             return obj;
         }
 
-        public static IDbObject CreateDbObj(string dbTypename)
+        public static IDbObject CreateDbObj(string dbTypename,string connStr)
         {
-            return (IDbObject)DBOMaker.CreateObject("Idefav.DbObjects", "Idefav.DbObjects." + dbTypename + ".DbObject");
+            return (IDbObject)DBOMaker.CreateObject("Idefav.DbObjects", "Idefav.DbObjects." + dbTypename + ".DbObject",connStr);
         }
 
+        public static IDbObject CreateDbObj(DBType dbtype,string connStr)
+        {
+            return CreateDbObj(dbtype.ToString(),connStr);
+        }
         
     }
 }

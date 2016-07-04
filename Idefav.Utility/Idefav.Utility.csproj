@@ -48,6 +48,7 @@
     <Compile Include="ColumnInfo.cs" />
     <Compile Include="ConfigHelper.cs" />
     <Compile Include="DatatypeMap.cs" />
+    <Compile Include="DBType.cs" />
     <Compile Include="ExpressionToSQL.cs" />
     <Compile Include="INIFile.cs" />
     <Compile Include="PrimaryKeyAttribute.cs" />

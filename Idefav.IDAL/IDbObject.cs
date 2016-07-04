@@ -25,7 +25,19 @@ namespace Idefav.IDAL
 
         DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select,
             params KeyValuePair<string, object>[] parameters);
-        DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select, out int count, params KeyValuePair<string,object>[] parameters);
+
+        DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby,OrderDirection direction, string select,
+            params KeyValuePair<string, object>[] parameters);
+
+        DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, out int count, string orderby,
+            OrderDirection direction = OrderDirection.DESC, string select = "*",
+            params KeyValuePair<string, object>[] parameters);
+
+        DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string orderby, string select, params KeyValuePair<string, object>[] parameters);
+        DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string orderby,OrderDirection direction, string select, params KeyValuePair<string,object>[] parameters);
+        DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, string orderby,
+           OrderDirection direction = OrderDirection.DESC, string select = "*",
+           params KeyValuePair<string, object>[] parameters);
 
         string GetParameterName(string name);
         T QueryModel<T>(string sql, params KeyValuePair<string, object>[] parameters) where T : class, new();

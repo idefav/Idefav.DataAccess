@@ -46,13 +46,24 @@ namespace Idefav.Utility
                     continue;
                 }
 
-                string tableFieldName = tableField != null && !string.IsNullOrEmpty(tableField.FieldName)
-                    ? tableField.FieldName
-                    : propertyInfo.Name;
-                object tableFieldValue = propertyInfo.GetValue(model, null);
+                if (tableField != null)
+                {
+                    string tableFieldName = tableField != null && !string.IsNullOrEmpty(tableField.FieldName)
+                        ? tableField.FieldName
+                        : propertyInfo.Name;
+                    object tableFieldValue = propertyInfo.GetValue(model, null);
 
-                KeyValuePair<string, object> kv = new KeyValuePair<string, object>(tableFieldName, tableFieldValue);
-                cti.Fields.Add(kv);
+                    KeyValuePair<string, object> kv = new KeyValuePair<string, object>(tableFieldName, tableFieldValue);
+                    cti.Fields.Add(kv);
+
+                }
+                else
+                {
+                    continue;
+                    
+                }
+
+                
             }
             return cti;
         }

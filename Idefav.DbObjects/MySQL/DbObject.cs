@@ -12,9 +12,17 @@ namespace Idefav.DbObjects.MySQL
 {
     public class DbObject : IDbObject
     {
-        public string DbType { get { return "MySQL"; } }
+        public string DbType => DBType.MySQL.ToString();
         public string DbConnectStr { get; set; }
-        public string Perfix { get { return "@"; } }
+        public string Perfix => "@";
+
+        public DbObject() { }
+
+        public DbObject(string connStr)
+        {
+            DbConnectStr = connStr;
+        }
+
         public T DbConnect<T>(Func<IDbConnection, T> proc)
         {
             using (MySqlConnection connection = new MySqlConnection(DbConnectStr))
@@ -154,6 +162,36 @@ namespace Idefav.DbObjects.MySQL
                 adp.Fill(ds);
                 return ds.Tables[0];
             });
+        }
+
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, OrderDirection direction,
+            string @select, params KeyValuePair<string, object>[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, out int count, string @orderby,
+            OrderDirection direction = OrderDirection.DESC, string @select = "*", params KeyValuePair<string, object>[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby, string @select,
+            params KeyValuePair<string, object>[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby,
+            OrderDirection direction, string @select, params KeyValuePair<string, object>[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, string @orderby,
+            OrderDirection direction = OrderDirection.DESC, string @select = "*", params KeyValuePair<string, object>[] parameters)
+        {
+            throw new NotImplementedException();
         }
 
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, string @select, out int count,

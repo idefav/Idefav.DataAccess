@@ -29,15 +29,15 @@ namespace Idefav.DbObjects.SQLServer
         /// <summary>
         /// 数据库类型
         /// </summary>
-        public string DbType
-        {
-            get { return "SQLServer"; }
-        }
+        public string DbType => DBType.SQLServer.ToString();
 
-        public string Perfix
+
+
+        public DbObject(string connStr)
         {
-            get { return "@"; }
+            DbConnectStr = connStr;
         }
+        public string Perfix => "@";
 
         /// <summary>
         /// 连接字符串
@@ -202,7 +202,16 @@ namespace Idefav.DbObjects.SQLServer
                         PropertyInfo pi = typeof(T).GetProperty(dr.GetName(i));
                         if (pi != null)
                         {
-                            pi.SetValue(model, dr.GetValue(i), null);
+                            var v = dr.GetValue(i);
+                            if (v == DBNull.Value)
+                            {
+                                pi.SetValue(model, null, null);
+                            }
+                            else
+                            {
+                                pi.SetValue(model, v, null);
+                            }
+                           
                         }
                     }
                     models.Add(model);
@@ -289,7 +298,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="count"></param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select,out int count,
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize,out int count,  string orderby,  string select = "*",
             params KeyValuePair<string, object>[] parameters)
         {
             StringBuilder qSql = new StringBuilder();
@@ -297,10 +306,102 @@ namespace Idefav.DbObjects.SQLServer
             int startIndex = (pageNo - 1) * pageSize + 1; //开始
             int endIndex = pageNo * pageSize;
             sql.Append(" WITH TB1 as (" + sqlstr + "), ");
-            sql.Append(" TB2 as(SELECT ROW_NUMBER() OVER(ORDER BY " + orderby + ") AS RN,* FROM TB1) ");
+            sql.Append(" TB2 as(SELECT ROW_NUMBER() OVER(ORDER BY " + orderby  + ") AS RN,* FROM TB1) ");
             sql.Append(" SELECT " + select + " FROM  TB2 ");
             sql.Append(" WHERE RN >= " + startIndex + " AND RN<= " + endIndex + " ");
-            sql.Append(" ORDER BY " + orderby + " ");
+            sql.Append(" ORDER BY " + orderby  + " ");
+
+            count = GetCount(sqlstr, parameters);
+            qSql.Append(string.Format(sql.ToString(), sqlstr));
+
+            return DbExcute(cmd =>
+            {
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+
+                sqlcmd.CommandText = qSql.ToString();
+                if (parameters != null)
+                {
+                    sqlcmd.Parameters.Clear();
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                }
+                SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
+                DataSet ds = new DataSet();
+                adp.Fill(ds);
+                return ds.Tables[0];
+            });
+        }
+        /// <summary>
+        /// 分页查询
+        /// </summary>
+        /// <param name="sqlstr">SQL语句</param>
+        /// <param name="pageNo">页码</param>
+        /// <param name="pageSize">每页记录数</param>
+        /// <param name="orderby">排序字段(如:ID,NAME DESC)</param>
+        /// <param name="direction">排序方向</param>
+        /// <param name="select">筛选</param>
+        /// <param name="count"></param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize,out int count, string orderby, OrderDirection direction = OrderDirection.DESC, string select="*",
+            params KeyValuePair<string, object>[] parameters)
+        {
+            StringBuilder qSql = new StringBuilder();
+            StringBuilder sql = new StringBuilder();
+            int startIndex = (pageNo - 1) * pageSize + 1; //开始
+            int endIndex = pageNo * pageSize;
+            sql.Append(" WITH TB1 as (" + sqlstr + "), ");
+            sql.Append(" TB2 as(SELECT ROW_NUMBER() OVER(ORDER BY " + orderby+" "+direction + ") AS RN,* FROM TB1) ");
+            sql.Append(" SELECT " + select + " FROM  TB2 ");
+            sql.Append(" WHERE RN >= " + startIndex + " AND RN<= " + endIndex + " ");
+            sql.Append(" ORDER BY " + orderby+" "+direction + " ");
+
+            count = GetCount(sqlstr, parameters);
+            qSql.Append(string.Format(sql.ToString(), sqlstr));
+
+            return DbExcute(cmd =>
+            {
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+
+                sqlcmd.CommandText = qSql.ToString();
+                if (parameters != null)
+                {
+                    sqlcmd.Parameters.Clear();
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                }
+                SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
+                DataSet ds = new DataSet();
+                adp.Fill(ds);
+                return ds.Tables[0];
+            });
+        }
+
+        /// <summary>
+        /// 分页查询
+        /// </summary>
+        /// <param name="sqlstr">SQL语句</param>
+        /// <param name="offset">偏移量</param>
+        /// <param name="pageNo">页码</param>
+        /// <param name="pageSize">每页记录数</param>
+        /// <param name="orderby">排序字段(如:ID,NAME DESC)</param>
+        /// <param name="direction">排序方向</param>
+        /// <param name="select">筛选</param>
+        /// <param name="count"></param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        public DataTable QueryPageTableOffset(string sqlstr,int offset, int pageNo, int pageSize, out int count, string orderby, OrderDirection direction = OrderDirection.DESC, string select = "*",
+           params KeyValuePair<string, object>[] parameters)
+        {
+            StringBuilder qSql = new StringBuilder();
+            StringBuilder sql = new StringBuilder();
+            int startIndex = (pageNo - 1) * pageSize + 1; //开始
+            int endIndex = pageNo * pageSize;
+            sql.Append(" WITH TB1 as (" + sqlstr + "), ");
+            sql.Append(" TB2 as(SELECT ROW_NUMBER() OVER(ORDER BY " + orderby + " " + direction + ") AS RN,* FROM TB1) ");
+            sql.Append(" SELECT " + select + " FROM  TB2 ");
+            sql.Append(" WHERE RN >= " + (startIndex+offset) + " AND RN<= " + (endIndex+offset) + " ");
+            sql.Append(" ORDER BY " + orderby + " " + direction + " ");
 
             count = GetCount(sqlstr, parameters);
             qSql.Append(string.Format(sql.ToString(), sqlstr));
@@ -334,7 +435,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="count"></param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select,
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select="*",
             params KeyValuePair<string, object>[] parameters)
         {
             StringBuilder qSql = new StringBuilder();
@@ -367,6 +468,102 @@ namespace Idefav.DbObjects.SQLServer
                 return ds.Tables[0];
             });
         }
+
+        
+
+        /// <summary>
+        /// 分页查询
+        /// </summary>
+        /// <param name="sqlstr">SQL语句</param>
+        /// <param name="pageNo">页码</param>
+        /// <param name="pageSize">每页记录数</param>
+        /// <param name="orderby">排序字段(如:ID,NAME DESC)</param>
+        /// <param name="direction">排序方向默认DESC</param>
+        /// <param name="select">筛选</param>
+        /// <param name="count"></param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby,OrderDirection direction=OrderDirection.DESC, string select = "*",
+            params KeyValuePair<string, object>[] parameters)
+        {
+            StringBuilder qSql = new StringBuilder();
+            StringBuilder sql = new StringBuilder();
+            int startIndex = (pageNo - 1) * pageSize + 1; //开始
+            int endIndex = pageNo * pageSize;
+            sql.Append(" WITH TB1 as (" + sqlstr + "), ");
+            sql.Append(" TB2 as(SELECT ROW_NUMBER() OVER(ORDER BY " + orderby+" "+direction + ") AS RN,* FROM TB1) ");
+            sql.Append(" SELECT " + select + " FROM  TB2 ");
+            sql.Append(" WHERE RN >= " + startIndex + " AND RN<= " + endIndex + " ");
+            sql.Append(" ORDER BY " + orderby+" "+direction + " ");
+
+
+            qSql.Append(string.Format(sql.ToString(), sqlstr));
+
+            return DbExcute(cmd =>
+            {
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+
+                sqlcmd.CommandText = qSql.ToString();
+                if (parameters != null)
+                {
+                    sqlcmd.Parameters.Clear();
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                }
+                SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
+                DataSet ds = new DataSet();
+                adp.Fill(ds);
+                return ds.Tables[0];
+            });
+        }
+
+        /// <summary>
+        /// 分页查询
+        /// </summary>
+        /// <param name="sqlstr">SQL语句</param>
+        /// <param name="offset">偏移量</param>
+        /// <param name="pageNo">页码</param>
+        /// <param name="pageSize">每页记录数</param>
+        /// <param name="orderby">排序字段(如:ID,NAME DESC)</param>
+        /// <param name="direction">排序方向默认DESC</param>
+        /// <param name="select">筛选</param>
+        /// <param name="count"></param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        public DataTable QueryPageTableOffset(string sqlstr,int offset, int pageNo, int pageSize, string orderby, OrderDirection direction = OrderDirection.DESC, string select = "*",
+            params KeyValuePair<string, object>[] parameters)
+        {
+            StringBuilder qSql = new StringBuilder();
+            StringBuilder sql = new StringBuilder();
+            int startIndex = (pageNo - 1) * pageSize + 1; //开始
+            int endIndex = pageNo * pageSize;
+            sql.Append(" WITH TB1 as (" + sqlstr + "), ");
+            sql.Append(" TB2 as(SELECT ROW_NUMBER() OVER(ORDER BY " + orderby + " " + direction + ") AS RN,* FROM TB1) ");
+            sql.Append(" SELECT " + select + " FROM  TB2 ");
+            sql.Append(" WHERE RN >= " + (startIndex+offset) + " AND RN<= " + (endIndex+offset) + " ");
+            sql.Append(" ORDER BY " + orderby + " " + direction + " ");
+
+
+            qSql.Append(string.Format(sql.ToString(), sqlstr));
+
+            return DbExcute(cmd =>
+            {
+                SqlCommand sqlcmd = cmd as SqlCommand;
+                sqlcmd.CommandType = CommandType.Text;
+
+                sqlcmd.CommandText = qSql.ToString();
+                if (parameters != null)
+                {
+                    sqlcmd.Parameters.Clear();
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                }
+                SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
+                DataSet ds = new DataSet();
+                adp.Fill(ds);
+                return ds.Tables[0];
+            });
+        }
+
 
         public int GetCount(string sql, params KeyValuePair<string, object>[] parameters)
         {
