@@ -74,6 +74,11 @@ namespace Idefav.DbObjects.MySQL
             }, transaction);
         }
 
+        public int ExceuteSql(string sql, IDbTransaction transaction = null, object parameters = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool ExceuteTrans(Func<IDbTransaction, bool> proc)
         {
             return DbConnect(conn =>
@@ -111,6 +116,11 @@ namespace Idefav.DbObjects.MySQL
             });
         }
 
+        public DataSet Query(string SQLString, object parameters = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public DataTable QueryDataTable(string sql, params KeyValuePair<string, object>[] parameters)
         {
             return DbExcute(cmd =>
@@ -127,6 +137,11 @@ namespace Idefav.DbObjects.MySQL
             });
         }
 
+        public DataTable QueryDataTable(string sql, object parameters = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public IDataReader QueryDataReader(string sql, params KeyValuePair<string, object>[] parameters)
         {
             MySqlConnection connection = new MySqlConnection(DbConnectStr);
@@ -141,6 +156,11 @@ namespace Idefav.DbObjects.MySQL
                 cmd.Parameters.AddRange(MakeParams(parameters).ToArray());
             }
             return cmd.ExecuteReader(CommandBehavior.CloseConnection);
+        }
+
+        public IDataReader QueryDataReader(string sql, object parameters = null)
+        {
+            throw new NotImplementedException();
         }
 
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, string @select,
@@ -164,8 +184,20 @@ namespace Idefav.DbObjects.MySQL
             });
         }
 
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, string @select,
+            object parameters = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, OrderDirection direction,
             string @select, params KeyValuePair<string, object>[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, OrderDirection direction,
+            string @select, object parameters = null)
         {
             throw new NotImplementedException();
         }
@@ -176,8 +208,20 @@ namespace Idefav.DbObjects.MySQL
             throw new NotImplementedException();
         }
 
+        public DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, out int count, string @orderby,
+            OrderDirection direction = OrderDirection.DESC, string @select = "*", object parameters = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby, string @select,
             params KeyValuePair<string, object>[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby, string @select,
+            object parameters = null)
         {
             throw new NotImplementedException();
         }
@@ -188,8 +232,20 @@ namespace Idefav.DbObjects.MySQL
             throw new NotImplementedException();
         }
 
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby,
+            OrderDirection direction, string @select, object parameters = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, string @orderby,
             OrderDirection direction = OrderDirection.DESC, string @select = "*", params KeyValuePair<string, object>[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, string @orderby,
+            OrderDirection direction = OrderDirection.DESC, string @select = "*", object parameters = null)
         {
             throw new NotImplementedException();
         }
@@ -245,6 +301,11 @@ namespace Idefav.DbObjects.MySQL
             return model;
         }
 
+        public T QueryModel<T>(string sql, object parameters = null) where T : class, new()
+        {
+            throw new NotImplementedException();
+        }
+
         public List<T> QueryModels<T>(string sql, params KeyValuePair<string, object>[] parameters) where T : class, new()
         {
             List<T> models = new List<T>();
@@ -267,6 +328,11 @@ namespace Idefav.DbObjects.MySQL
             return models;
         }
 
+        public List<T> QueryModels<T>(string sql, object parameters = null) where T : class, new()
+        {
+            throw new NotImplementedException();
+        }
+
         public object ExecuteScalar(string sql, params KeyValuePair<string, object>[] parameters)
         {
             return DbExcute(cmd =>
@@ -281,6 +347,11 @@ namespace Idefav.DbObjects.MySQL
                 }
                 return sqlcmd.ExecuteScalar();
             });
+        }
+
+        public object ExecuteScalar(string sql, object parameters = null)
+        {
+            throw new NotImplementedException();
         }
 
         public bool Insert<T>(T model, IDbTransaction transaction = null)
@@ -351,6 +422,11 @@ namespace Idefav.DbObjects.MySQL
             return ExceuteSql(sql, transaction, parameters) > 0;
         }
 
+        public bool Update(string fields, string @where, string tableName, IDbTransaction transaction = null, object parameters = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Delete<T>(T model, IDbTransaction transaction = null)
         {
             ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
@@ -373,6 +449,11 @@ namespace Idefav.DbObjects.MySQL
             string sql = "delete from " + tableName + " ";
             sql += " " + where + " ";
             return ExceuteSql(sql, transaction, parameters) > 0;
+        }
+
+        public bool Delete(string @where, string tableName, IDbTransaction transaction = null, object parameters = null)
+        {
+            throw new NotImplementedException();
         }
 
         public bool IsExist<T>(T model, bool ignoreAutoIm = false)
@@ -415,6 +496,11 @@ namespace Idefav.DbObjects.MySQL
             return (int)ExecuteScalar(sql, kv) > 0;
         }
 
+        public bool IsExist(string @where, string tableName, object kv = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public List<IDbDataParameter> MakeParams(KeyValuePair<string, object>[] parameters)
         {
             List<IDbDataParameter> listParameters = new List<IDbDataParameter>();
@@ -444,6 +530,11 @@ namespace Idefav.DbObjects.MySQL
                 }
                 return int.Parse(sqlcmd.ExecuteScalar().ToString());
             });
+        }
+
+        public int GetCount(string sql, object parameters = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }

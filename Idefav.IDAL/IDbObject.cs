@@ -58,6 +58,15 @@ namespace Idefav.IDAL
         int ExceuteSql(string sql, IDbTransaction transaction = null, params KeyValuePair<string, object>[] parameters);
 
         /// <summary>
+        /// 执行SQL,并支持事务,返回受影响的行数
+        /// </summary>
+        /// <param name="sql">SQL语句</param>
+        /// <param name="transaction">事务</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        int ExceuteSql(string sql, IDbTransaction transaction = null,object parameters=null);
+
+        /// <summary>
         /// 执行事务
         /// </summary>
         /// <param name="proc">处理逻辑</param>
@@ -73,6 +82,14 @@ namespace Idefav.IDAL
         DataSet Query(string SQLString,params KeyValuePair<string,object>[] parameters);
 
         /// <summary>
+        /// 查询
+        /// </summary>
+        /// <param name="SQLString">sql语句</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        DataSet Query(string SQLString, object parameters=null);
+
+        /// <summary>
         /// 查询 并返回DataTable
         /// </summary>
         /// <param name="sql">Sql语句</param>
@@ -81,12 +98,28 @@ namespace Idefav.IDAL
         DataTable QueryDataTable(string sql,params KeyValuePair<string,object>[] parameters);
 
         /// <summary>
+        /// 查询 并返回DataTable
+        /// </summary>
+        /// <param name="sql">Sql语句</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        DataTable QueryDataTable(string sql, object parameters=null);
+
+        /// <summary>
         /// 使用DataReader查询
         /// </summary>
         /// <param name="sql">Sql语句</param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
         IDataReader QueryDataReader(string sql, params KeyValuePair<string, object>[] parameters);
+
+        /// <summary>
+        /// 使用DataReader查询
+        /// </summary>
+        /// <param name="sql">Sql语句</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        IDataReader QueryDataReader(string sql, object parameters=null);
 
         /// <summary>
         /// 分页查询
@@ -104,6 +137,19 @@ namespace Idefav.IDAL
         /// <summary>
         /// 分页查询
         /// </summary>
+        /// <param name="sqlstr">查询语句</param>
+        /// <param name="pageNo">页码</param>
+        /// <param name="pageSize">页面大小</param>
+        /// <param name="orderby">排序字段</param>
+        /// <param name="select">选择的字段</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select,
+            object parameters=null);
+
+        /// <summary>
+        /// 分页查询
+        /// </summary>
         /// <param name="sqlstr">sql语句</param>
         /// <param name="pageNo">页码</param>
         /// <param name="pageSize">页面大小</param>
@@ -114,6 +160,20 @@ namespace Idefav.IDAL
         /// <returns></returns>
         DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby,OrderDirection direction, string select,
             params KeyValuePair<string, object>[] parameters);
+
+        /// <summary>
+        /// 分页查询
+        /// </summary>
+        /// <param name="sqlstr">sql语句</param>
+        /// <param name="pageNo">页码</param>
+        /// <param name="pageSize">页面大小</param>
+        /// <param name="orderby">排序</param>
+        /// <param name="direction">排序方向</param>
+        /// <param name="select">选择的字段</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, OrderDirection direction, string select,
+            object parameters=null);
 
         /// <summary>
         /// 分页查询 支持偏移分页
@@ -133,6 +193,23 @@ namespace Idefav.IDAL
             params KeyValuePair<string, object>[] parameters);
 
         /// <summary>
+        /// 分页查询 支持偏移分页
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        /// <param name="offset"></param>
+        /// <param name="pageNo"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="count"></param>
+        /// <param name="orderby"></param>
+        /// <param name="direction"></param>
+        /// <param name="select"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, out int count, string orderby,
+            OrderDirection direction = OrderDirection.DESC, string select = "*",
+            object parameters=null);
+
+        /// <summary>
         /// 分页查询 并返回总记录数量
         /// </summary>
         /// <param name="sqlstr">SQL语句</param>
@@ -144,6 +221,19 @@ namespace Idefav.IDAL
         /// <param name="parameters">参数</param>
         /// <returns></returns>
         DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string orderby, string select, params KeyValuePair<string, object>[] parameters);
+        
+        /// <summary>
+        /// 分页查询 并返回总记录数量
+        /// </summary>
+        /// <param name="sqlstr">SQL语句</param>
+        /// <param name="pageNo">页码</param>
+        /// <param name="pageSize">分页大小</param>
+        /// <param name="count">总记录数量</param>
+        /// <param name="orderby">排序字段</param>
+        /// <param name="select">选择的字段</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string orderby, string select, object parameters=null);
 
         /// <summary>
         /// 分页查询 并返回总记录数量
@@ -160,6 +250,20 @@ namespace Idefav.IDAL
         DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string orderby,OrderDirection direction, string select, params KeyValuePair<string,object>[] parameters);
 
         /// <summary>
+        /// 分页查询 并返回总记录数量
+        /// </summary>
+        /// <param name="sqlstr">sql</param>
+        /// <param name="pageNo">页码</param>
+        /// <param name="pageSize">分页大小</param>
+        /// <param name="count">总记录数量</param>
+        /// <param name="orderby">排序字段</param>
+        /// <param name="direction">排序方向</param>
+        /// <param name="select">选择的字段</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string orderby, OrderDirection direction, string select, object parameters=null);
+
+        /// <summary>
         /// 分页查询 带偏移
         /// </summary>
         /// <param name="sqlstr"></param>
@@ -174,6 +278,22 @@ namespace Idefav.IDAL
         DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, string orderby,
            OrderDirection direction = OrderDirection.DESC, string select = "*",
            params KeyValuePair<string, object>[] parameters);
+
+        /// <summary>
+        /// 分页查询 带偏移
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        /// <param name="offset"></param>
+        /// <param name="pageNo"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="orderby"></param>
+        /// <param name="direction"></param>
+        /// <param name="select"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, string orderby,
+           OrderDirection direction = OrderDirection.DESC, string select = "*",
+           object parameters=null);
 
         /// <summary>
         /// 获取参数名称,带各种数据库的前缀
@@ -198,7 +318,25 @@ namespace Idefav.IDAL
         /// <param name="sql">sql语句</param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
+        T QueryModel<T>(string sql, object parameters=null) where T : class, new();
+
+        /// <summary>
+        /// 查询
+        /// </summary>
+        /// <typeparam name="T">模型类型</typeparam>
+        /// <param name="sql">sql语句</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
         List<T> QueryModels<T>(string sql, params KeyValuePair<string, object>[] parameters) where T : class, new();
+
+        /// <summary>
+        /// 查询
+        /// </summary>
+        /// <typeparam name="T">模型类型</typeparam>
+        /// <param name="sql">sql语句</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        List<T> QueryModels<T>(string sql, object parameters=null) where T : class, new();
 
         /// <summary>
         /// 执行sql查询语句
@@ -207,6 +345,14 @@ namespace Idefav.IDAL
         /// <param name="parameters">参数</param>
         /// <returns></returns>
         object ExecuteScalar(string sql, params KeyValuePair<string, object>[] parameters);
+
+        /// <summary>
+        /// 执行sql查询语句
+        /// </summary>
+        /// <param name="sql">sql语句</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        object ExecuteScalar(string sql, object parameters=null);
 
         /// <summary>
         /// 插入
@@ -239,6 +385,18 @@ namespace Idefav.IDAL
             params KeyValuePair<string, object>[] parameters);
 
         /// <summary>
+        /// 更新
+        /// </summary>
+        /// <param name="fields">字段</param>
+        /// <param name="where">条件</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="transaction">事务</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        bool Update(string fields, string where, string tableName, IDbTransaction transaction = null,
+            object parameters=null);
+
+        /// <summary>
         /// 删除
         /// </summary>
         /// <typeparam name="T">模型类型</typeparam>
@@ -256,6 +414,16 @@ namespace Idefav.IDAL
         /// <param name="parameters">参数</param>
         /// <returns></returns>
         bool Delete(string where, string tableName, IDbTransaction transaction = null, params KeyValuePair<string, object>[] parameters);
+
+        /// <summary>
+        /// 删除
+        /// </summary>
+        /// <param name="where">where条件</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="transaction">事务</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        bool Delete(string where, string tableName, IDbTransaction transaction = null, object parameters=null);
 
         /// <summary>
         /// 是否存在
@@ -276,6 +444,15 @@ namespace Idefav.IDAL
         bool IsExist(string where, string tableName, params KeyValuePair<string, object>[] kv);
 
         /// <summary>
+        /// 是否存在
+        /// </summary>
+        /// <param name="where">where条件</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="kv">参数</param>
+        /// <returns></returns>
+        bool IsExist(string where, string tableName, object kv=null);
+
+        /// <summary>
         /// 参数组合
         /// </summary>
         /// <param name="parameters">参数</param>
@@ -289,5 +466,13 @@ namespace Idefav.IDAL
         /// <param name="parameters">参数名称</param>
         /// <returns></returns>
         int GetCount(string sql, params KeyValuePair<string, object>[] parameters);
+
+        /// <summary>
+        /// 获取数据数据量
+        /// </summary>
+        /// <param name="sql">sql语句</param>
+        /// <param name="parameters">参数名称</param>
+        /// <returns></returns>
+        int GetCount(string sql,object parameters=null);
     }
 }

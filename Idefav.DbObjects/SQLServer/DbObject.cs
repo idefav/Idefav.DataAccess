@@ -85,6 +85,11 @@ namespace Idefav.DbObjects.SQLServer
             }, transaction);
         }
 
+        public int ExceuteSql(string sql, IDbTransaction transaction = null, object parameters = null)
+        {
+            return ExceuteSql(sql, transaction, Common.ObjectToDictionary(parameters).ToArray());
+        }
+
         /// <summary>
         /// 执行事务
         /// </summary>
@@ -173,6 +178,11 @@ namespace Idefav.DbObjects.SQLServer
             });
         }
 
+        public DataSet Query(string SQLString, object parameters = null)
+        {
+            return Query(SQLString, Common.ObjectToDictionary(parameters).ToArray());
+        }
+
         public DataTable QueryDataTable(string sql, params KeyValuePair<string, object>[] parameters)
         {
             return DbExcute(cmd =>
@@ -187,6 +197,16 @@ namespace Idefav.DbObjects.SQLServer
                 adp.Fill(ds);
                 return ds.Tables[0];
             });
+        }
+
+        public DataTable QueryDataTable(string sql, object parameters = null)
+        {
+            return QueryDataTable(sql, Common.ObjectToDictionary(parameters).ToArray());
+        }
+
+        public T QueryModel<T>(string sql, object parameters = null) where T : class, new()
+        {
+            return QueryModel<T>(sql, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public List<T> QueryModels<T>(string sql, params KeyValuePair<string, object>[] parameters) where T : class, new()
@@ -220,6 +240,11 @@ namespace Idefav.DbObjects.SQLServer
             return models;
         }
 
+        public List<T> QueryModels<T>(string sql, object parameters = null) where T : class, new()
+        {
+            return QueryModels<T>(sql, Common.ObjectToDictionary(parameters).ToArray());
+        }
+
         public object ExecuteScalar(string sql, params KeyValuePair<string, object>[] parameters)
         {
             return DbExcute(cmd =>
@@ -234,6 +259,11 @@ namespace Idefav.DbObjects.SQLServer
                 }
                 return sqlcmd.ExecuteScalar();
             });
+        }
+
+        public object ExecuteScalar(string sql, object parameters = null)
+        {
+            return ExecuteScalar(sql, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         /// <summary>
@@ -287,6 +317,18 @@ namespace Idefav.DbObjects.SQLServer
             return cmd.ExecuteReader(CommandBehavior.CloseConnection);
         }
 
+        public IDataReader QueryDataReader(string sql, object parameters = null)
+        {
+            return QueryDataReader(sql, Common.ObjectToDictionary(parameters).ToArray());
+        }
+
+        public DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, out int count, string @orderby,
+            OrderDirection direction = OrderDirection.DESC, string @select = "*", object parameters = null)
+        {
+            return QueryPageTableOffset(sqlstr, offset, pageNo, pageSize, out count, orderby, direction, select,
+                Common.ObjectToDictionary(parameters).ToArray());
+        }
+
         /// <summary>
         /// 分页查询
         /// </summary>
@@ -331,6 +373,14 @@ namespace Idefav.DbObjects.SQLServer
                 return ds.Tables[0];
             });
         }
+
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby, string @select,
+            object parameters = null)
+        {
+            return QueryPageTable(sqlstr, pageNo, pageSize, out count, orderby, select,
+                Common.ObjectToDictionary(parameters).ToArray());
+        }
+
         /// <summary>
         /// 分页查询
         /// </summary>
@@ -375,6 +425,20 @@ namespace Idefav.DbObjects.SQLServer
                 adp.Fill(ds);
                 return ds.Tables[0];
             });
+        }
+
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby,
+            OrderDirection direction, string @select, object parameters = null)
+        {
+            return QueryPageTable(sqlstr, pageNo, pageSize, out count, orderby, direction, select,
+                Common.ObjectToDictionary(parameters).ToArray());
+        }
+
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, OrderDirection direction,
+            string @select, object parameters = null)
+        {
+            return QueryPageTable(sqlstr, pageNo, pageSize, orderby, direction, select,
+                Common.ObjectToDictionary(parameters).ToArray());
         }
 
         /// <summary>
@@ -469,7 +533,13 @@ namespace Idefav.DbObjects.SQLServer
             });
         }
 
-        
+        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, string @select,
+            object parameters = null)
+        {
+            return QueryPageTable(sqlstr, pageNo, pageSize, orderby, select,
+                Common.ObjectToDictionary(parameters).ToArray());
+        }
+
 
         /// <summary>
         /// 分页查询
@@ -564,6 +634,13 @@ namespace Idefav.DbObjects.SQLServer
             });
         }
 
+        public DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, string @orderby,
+            OrderDirection direction = OrderDirection.DESC, string @select = "*", object parameters = null)
+        {
+            return QueryPageTableOffset(sqlstr, offset, pageNo, pageSize, orderby, direction, select,
+                Common.ObjectToDictionary(parameters).ToArray());
+        }
+
 
         public int GetCount(string sql, params KeyValuePair<string, object>[] parameters)
         {
@@ -580,6 +657,11 @@ namespace Idefav.DbObjects.SQLServer
                 }
                 return int.Parse(sqlcmd.ExecuteScalar().ToString());
             });
+        }
+
+        public int GetCount(string sql, object parameters = null)
+        {
+            return GetCount(sql, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         /// <summary>
@@ -681,6 +763,11 @@ namespace Idefav.DbObjects.SQLServer
             return ExceuteSql(sql, transaction, parameters) > 0;
         }
 
+        public bool Update(string fields, string @where, string tableName, IDbTransaction transaction = null, object parameters = null)
+        {
+            return Update(fields, where, tableName, transaction, Common.ObjectToDictionary(parameters).ToArray());
+        }
+
         /// <summary>
         /// 删除
         /// </summary>
@@ -711,6 +798,11 @@ namespace Idefav.DbObjects.SQLServer
             string sql = "delete from " + tableName + " ";
             sql += " " + where + " ";
             return ExceuteSql(sql, transaction, parameters) > 0;
+        }
+
+        public bool Delete(string @where, string tableName, IDbTransaction transaction = null, object parameters = null)
+        {
+            return Delete(where, tableName, transaction, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         /// <summary>
@@ -766,6 +858,11 @@ namespace Idefav.DbObjects.SQLServer
             sql += where;
             return (int)ExecuteScalar(sql, kv) > 0;
 
+        }
+
+        public bool IsExist(string @where, string tableName, object kv = null)
+        {
+            return IsExist(where, tableName, Common.ObjectToDictionary(kv).ToArray());
         }
 
         /// <summary>
