@@ -597,7 +597,6 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="orderby">排序字段(如:ID,NAME DESC)</param>
         /// <param name="direction">排序方向默认DESC</param>
         /// <param name="select">筛选</param>
-        /// <param name="count"></param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
         public DataTable QueryPageTableOffset(string sqlstr,int offset, int pageNo, int pageSize, string orderby, OrderDirection direction = OrderDirection.DESC, string select = "*",

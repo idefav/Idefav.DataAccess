@@ -77,7 +77,7 @@ namespace Idefav.DbObjects.Oracle
 
         public int ExceuteSql(string sql, IDbTransaction transaction = null, object parameters = null)
         {
-            throw new NotImplementedException();
+            return ExceuteSql(sql, transaction, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public bool ExceuteTrans(Func<IDbTransaction, bool> proc)
@@ -119,7 +119,7 @@ namespace Idefav.DbObjects.Oracle
 
         public DataSet Query(string SQLString, object parameters = null)
         {
-            throw new NotImplementedException();
+            return Query(SQLString, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public DataTable QueryDataTable(string sql, params KeyValuePair<string, object>[] parameters)
@@ -140,7 +140,7 @@ namespace Idefav.DbObjects.Oracle
 
         public DataTable QueryDataTable(string sql, object parameters = null)
         {
-            throw new NotImplementedException();
+            return QueryDataTable(sql, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public IDataReader QueryDataReader(string sql, params KeyValuePair<string, object>[] parameters)
@@ -161,7 +161,7 @@ namespace Idefav.DbObjects.Oracle
 
         public IDataReader QueryDataReader(string sql, object parameters = null)
         {
-            throw new NotImplementedException();
+            return QueryDataReader(sql, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, string @select,
@@ -194,13 +194,36 @@ namespace Idefav.DbObjects.Oracle
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, string @select,
             object parameters = null)
         {
-            throw new NotImplementedException();
+            return QueryPageTable(sqlstr, pageNo, pageSize, orderby, select,
+                Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, OrderDirection direction,
             string @select, params KeyValuePair<string, object>[] parameters)
         {
-            throw new NotImplementedException();
+            int startIndex = (pageNo - 1) * pageSize + 1; //开始
+            int endIndex = pageNo * pageSize; //结束
+            StringBuilder sql = new StringBuilder();
+            sql.Append(string.Format(" SELECT * FROM "));
+            sql.Append(" (SELECT Z.*, ROWNUM RN FROM ({0}) Z ");
+            sql.Append(string.Format(" WHERE ROWNUM <= {0}) ", endIndex));
+            sql.Append(string.Format(" WHERE RN >= {0} ORDER by RN DESC ", startIndex));
+           
+            return DbExcute(cmd =>
+            {
+                OracleCommand orcmd = cmd as OracleCommand;
+                cmd.CommandType = CommandType.Text;
+                cmd.CommandText = string.Format(sql.ToString(), sqlstr);
+                if (parameters != null)
+                {
+                    orcmd.Parameters.Clear();
+                    orcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                }
+                OracleDataAdapter adp = new OracleDataAdapter(orcmd);
+                DataSet ds = new DataSet();
+                adp.Fill(ds);
+                return ds.Tables[0];
+            });
         }
 
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, OrderDirection direction,
