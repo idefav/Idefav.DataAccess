@@ -46,6 +46,7 @@
     <Compile Include="ClassTableInfoFactory.cs" />
     <Compile Include="CodeCommon.cs" />
     <Compile Include="ColumnInfo.cs" />
+    <Compile Include="Common.cs" />
     <Compile Include="ConfigHelper.cs" />
     <Compile Include="DatatypeMap.cs" />
     <Compile Include="DBType.cs" />
