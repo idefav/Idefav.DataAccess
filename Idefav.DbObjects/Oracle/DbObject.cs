@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
 using System.Reflection;
@@ -249,13 +250,15 @@ namespace Idefav.DbObjects.Oracle
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby, string @select,
             params KeyValuePair<string, object>[] parameters)
         {
-            throw new NotImplementedException();
+            return QueryPageTable(sqlstr, pageNo, pageSize, out count, orderby, OrderDirection.ASC, select,
+                parameters);
         }
 
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby, string @select,
             object parameters = null)
         {
-            throw new NotImplementedException();
+            return QueryPageTable(sqlstr, pageNo, pageSize, out count, orderby, select,
+                Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby,
@@ -312,7 +315,7 @@ namespace Idefav.DbObjects.Oracle
             //});
 
             return QueryPageTable(sqlstr, pageNo, pageSize,out count, orderby,OrderDirection.ASC, select, 
-                Common.ObjectToDictionary(parameters).ToArray());
+                parameters);
         }
 
         public string GetParameterName(string name)
