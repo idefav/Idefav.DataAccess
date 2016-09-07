@@ -13,7 +13,7 @@ namespace Idefav.Test
     [TestClass]
     public class OracleTest
     {
-        private string ConnStr = @"Data Source=FUNDBHVW;User Id=funddev;Password=veddnuf;";
+        private string ConnStr = @"Data Source=fundtest2;User Id=funddev;Password=FUNDDEV;";
         [TestMethod] 
         public void TestGetPageDataTable()
         {
@@ -31,6 +31,21 @@ namespace Idefav.Test
             int count = 0;
             db.QueryPageTable("", 1, 20, out count, "eid", "*", new {});
             Assert.AreEqual(db.QueryPageTable("select t.* from fundadmin.cfg_advert t", 1, 10, "eid", "*").Rows.Count > 0, true);
+        }
+
+        [TestMethod]
+        public void TestQueryPageTable()
+        {
+            IDbObject db = DbFactory.DBOMaker.CreateDbObj(DBType.Oracle, ConnStr);
+            db.DbConnectStr = ConnStr;
+            int count = 0;
+           var result= db.QueryPageTable(@"
+  select hkfcode, exddate pdate from FUNDADMIN.Hkfd_Bonus where (hkfcode,exddate) not in (select hkfcode,pdate from 
+                                                          fundadmin.Hkfd_Chgratio where stype=1 and eisdel=0 
+  )
+   and eisdel=0 ", 1, 10, out count,
+                "hkfcode", OrderDirection.DESC, "*", new {});
+            Assert.AreEqual(result!=null &&result.Rows.Count>0,true);
         }
     }
 }

@@ -14,7 +14,6 @@ namespace Idefav.DbObjects.Oracle
     {
         public string DbType => DBType.Oracle.ToString();
 
-
         public DbObject() { }
 
         public DbObject(string connStr)
@@ -22,6 +21,7 @@ namespace Idefav.DbObjects.Oracle
             DbConnectStr = connStr;
         }
         public string DbConnectStr { get; set; }
+
         public string Perfix => ":";
 
         public T DbConnect<T>(Func<IDbConnection, T> proc)
@@ -167,28 +167,29 @@ namespace Idefav.DbObjects.Oracle
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, string @select,
             params KeyValuePair<string, object>[] parameters)
         {
-            int startIndex = (pageNo - 1) * pageSize + 1; //开始
-            int endIndex = pageNo * pageSize; //结束
-            StringBuilder sql = new StringBuilder();
-            sql.Append(string.Format(" SELECT * FROM "));
-            sql.Append(" (SELECT Z.*, ROWNUM RN FROM ({0}) Z ");
-            sql.Append(string.Format(" WHERE ROWNUM <= {0}) ", endIndex));
-            sql.Append(string.Format(" WHERE RN >= {0} ORDER by RN DESC ", startIndex));
-            return DbExcute(cmd =>
-            {
-                OracleCommand orcmd = cmd as OracleCommand;
-                cmd.CommandType = CommandType.Text;
-                cmd.CommandText = string.Format(sql.ToString(), sqlstr);
-                if (parameters != null)
-                {
-                    orcmd.Parameters.Clear();
-                    orcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
-                }
-                OracleDataAdapter adp = new OracleDataAdapter(orcmd);
-                DataSet ds = new DataSet();
-                adp.Fill(ds);
-                return ds.Tables[0];
-            });
+            //int startIndex = (pageNo - 1) * pageSize + 1; //开始
+            //int endIndex = pageNo * pageSize; //结束
+            //StringBuilder sql = new StringBuilder();
+            //sql.Append(string.Format(" SELECT * FROM "));
+            //sql.Append(" (SELECT Z.*, ROWNUM RN FROM ({0}) Z ");
+            //sql.Append(string.Format(" WHERE ROWNUM <= {0} ORDER BY {1}) ", endIndex,orderby));
+            //sql.Append(string.Format(" WHERE RN >= {0} ORDER by RN DESC ", startIndex));
+            //return DbExcute(cmd =>
+            //{
+            //    OracleCommand orcmd = cmd as OracleCommand;
+            //    cmd.CommandType = CommandType.Text;
+            //    cmd.CommandText = string.Format(sql.ToString(), sqlstr);
+            //    if (parameters != null)
+            //    {
+            //        orcmd.Parameters.Clear();
+            //        orcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+            //    }
+            //    OracleDataAdapter adp = new OracleDataAdapter(orcmd);
+            //    DataSet ds = new DataSet();
+            //    adp.Fill(ds);
+            //    return ds.Tables[0];
+            //});
+            return QueryPageTable(sqlstr, pageNo, pageSize, orderby, OrderDirection.ASC, select, parameters);
         }
 
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, string @select,
@@ -206,7 +207,7 @@ namespace Idefav.DbObjects.Oracle
             StringBuilder sql = new StringBuilder();
             sql.Append(string.Format(" SELECT * FROM "));
             sql.Append(" (SELECT Z.*, ROWNUM RN FROM ({0}) Z ");
-            sql.Append(string.Format(" WHERE ROWNUM <= {0}) ", endIndex));
+            sql.Append(string.Format(" WHERE ROWNUM <= {0} ORDER BY {1} {2}) ", endIndex,orderby,direction));
             sql.Append(string.Format(" WHERE RN >= {0} ORDER by RN DESC ", startIndex));
            
             return DbExcute(cmd =>
@@ -229,7 +230,8 @@ namespace Idefav.DbObjects.Oracle
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, OrderDirection direction,
             string @select, object parameters = null)
         {
-            throw new NotImplementedException();
+            return QueryPageTable(sqlstr, pageNo, pageSize, orderby, direction, select,
+                Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, out int count, string @orderby,
@@ -259,13 +261,15 @@ namespace Idefav.DbObjects.Oracle
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby,
             OrderDirection direction, string @select, params KeyValuePair<string, object>[] parameters)
         {
-            throw new NotImplementedException();
+            count = GetCount(sqlstr, parameters);
+            return QueryPageTable(sqlstr, pageNo, pageSize, orderby, direction, select, parameters);
         }
 
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, out int count, string @orderby,
             OrderDirection direction, string @select, object parameters = null)
         {
-            throw new NotImplementedException();
+            return QueryPageTable(sqlstr, pageNo, pageSize, out count, orderby, direction, select,
+                Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, string @orderby,
@@ -283,29 +287,32 @@ namespace Idefav.DbObjects.Oracle
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, string @select, out int count,
             params KeyValuePair<string, object>[] parameters)
         {
-            int startIndex = (pageNo - 1) * pageSize + 1; //开始
-            int endIndex = pageNo * pageSize; //结束
-            StringBuilder sql = new StringBuilder();
-            sql.Append(string.Format(" SELECT * FROM "));
-            sql.Append(" (SELECT Z.*, ROWNUM RN FROM ({0}) Z ");
-            sql.Append(string.Format(" WHERE ROWNUM <= {0}) ", endIndex));
-            sql.Append(string.Format(" WHERE RN >= {0} ORDER by RN DESC ", startIndex));
-            count = GetCount(sqlstr, parameters);
-            return DbExcute(cmd =>
-            {
-                OracleCommand orcmd = cmd as OracleCommand;
-                cmd.CommandType = CommandType.Text;
-                cmd.CommandText = string.Format(sql.ToString(), sqlstr);
-                if (parameters != null)
-                {
-                    orcmd.Parameters.Clear();
-                    orcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
-                }
-                OracleDataAdapter adp = new OracleDataAdapter(orcmd);
-                DataSet ds = new DataSet();
-                adp.Fill(ds);
-                return ds.Tables[0];
-            });
+            //int startIndex = (pageNo - 1) * pageSize + 1; //开始
+            //int endIndex = pageNo * pageSize; //结束
+            //StringBuilder sql = new StringBuilder();
+            //sql.Append(string.Format(" SELECT * FROM "));
+            //sql.Append(" (SELECT Z.*, ROWNUM RN FROM ({0}) Z ");
+            //sql.Append(string.Format(" WHERE ROWNUM <= {0}) ", endIndex));
+            //sql.Append(string.Format(" WHERE RN >= {0} ORDER by RN DESC ", startIndex));
+            //count = GetCount(sqlstr, parameters);
+            //return DbExcute(cmd =>
+            //{
+            //    OracleCommand orcmd = cmd as OracleCommand;
+            //    cmd.CommandType = CommandType.Text;
+            //    cmd.CommandText = string.Format(sql.ToString(), sqlstr);
+            //    if (parameters != null)
+            //    {
+            //        orcmd.Parameters.Clear();
+            //        orcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+            //    }
+            //    OracleDataAdapter adp = new OracleDataAdapter(orcmd);
+            //    DataSet ds = new DataSet();
+            //    adp.Fill(ds);
+            //    return ds.Tables[0];
+            //});
+
+            return QueryPageTable(sqlstr, pageNo, pageSize,out count, orderby,OrderDirection.ASC, select, 
+                Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public string GetParameterName(string name)
@@ -337,7 +344,7 @@ namespace Idefav.DbObjects.Oracle
 
         public T QueryModel<T>(string sql, object parameters = null) where T : class, new()
         {
-            throw new NotImplementedException();
+            return QueryModel<T>(sql, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public List<T> QueryModels<T>(string sql, params KeyValuePair<string, object>[] parameters) where T : class, new()
@@ -364,7 +371,7 @@ namespace Idefav.DbObjects.Oracle
 
         public List<T> QueryModels<T>(string sql, object parameters = null) where T : class, new()
         {
-            throw new NotImplementedException();
+            return QueryModels<T>(sql, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public object ExecuteScalar(string sql, params KeyValuePair<string, object>[] parameters)
@@ -385,7 +392,7 @@ namespace Idefav.DbObjects.Oracle
 
         public object ExecuteScalar(string sql, object parameters = null)
         {
-            throw new NotImplementedException();
+            return ExecuteScalar(sql, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public bool Insert<T>(T model, IDbTransaction transaction = null)
@@ -458,7 +465,7 @@ namespace Idefav.DbObjects.Oracle
 
         public bool Update(string fields, string @where, string tableName, IDbTransaction transaction = null, object parameters = null)
         {
-            throw new NotImplementedException();
+            return Update(fields, where, tableName, transaction, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public bool Delete<T>(T model, IDbTransaction transaction = null)
@@ -487,7 +494,7 @@ namespace Idefav.DbObjects.Oracle
 
         public bool Delete(string @where, string tableName, IDbTransaction transaction = null, object parameters = null)
         {
-            throw new NotImplementedException();
+            return Delete(where, tableName, transaction, Common.ObjectToDictionary(parameters).ToArray());
         }
 
         public bool IsExist<T>(T model, bool ignoreAutoIm = false)
@@ -532,7 +539,7 @@ namespace Idefav.DbObjects.Oracle
 
         public bool IsExist(string @where, string tableName, object kv = null)
         {
-            throw new NotImplementedException();
+            return IsExist(where, tableName, Common.ObjectToDictionary(kv).ToArray());
         }
 
         public List<IDbDataParameter> MakeParams(KeyValuePair<string, object>[] parameters)
@@ -568,7 +575,7 @@ namespace Idefav.DbObjects.Oracle
 
         public int GetCount(string sql, object parameters = null)
         {
-            throw new NotImplementedException();
+            return GetCount(sql, Common.ObjectToDictionary(parameters).ToArray());
         }
     }
 }
