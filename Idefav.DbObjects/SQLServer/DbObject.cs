@@ -87,7 +87,19 @@ namespace Idefav.DbObjects.SQLServer
 
         public int ExceuteSql(string sql, IDbTransaction transaction = null, object parameters = null)
         {
-            return ExceuteSql(sql, transaction, Common.ObjectToDictionary(parameters).ToArray());
+
+            if (parameters.GetType() == typeof(Dictionary<string, object>))
+            {
+                return ExceuteSql(sql, transaction, ((Dictionary<string, object>) parameters).ToArray());
+            }
+            else if(parameters.GetType()==typeof(List<KeyValuePair<string,object>>))
+            {
+                return ExceuteSql(sql, transaction, parameters);
+            }
+            else
+            {
+                return ExceuteSql(sql, transaction, Common.ObjectToDictionary(parameters).ToArray());
+            }
         }
 
         /// <summary>
@@ -887,7 +899,7 @@ namespace Idefav.DbObjects.SQLServer
             {
                 foreach (var kv in parameters)
                 {
-                    SqlParameter sqlParameter = new SqlParameter(kv.Key, kv.Value);
+                    SqlParameter sqlParameter = new SqlParameter(GetParameterName(kv.Key), kv.Value);
                     listParameters.Add(sqlParameter);
                 }
             }
