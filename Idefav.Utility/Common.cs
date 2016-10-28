@@ -16,10 +16,17 @@ namespace Idefav.Utility
         /// <returns></returns>  
         public static Dictionary<String, Object> ObjectToDictionary(Object o)
         {
+            if (o == null) return null;
+
             Dictionary<String, Object> map = new Dictionary<string, object>();
 
             Type t = o.GetType();
-
+            if (t == typeof(Dictionary<string, object>)) return o as Dictionary<string, object>;
+            if (typeof (IEnumerable<KeyValuePair<string, object>>).IsAssignableFrom(t))
+            {
+                var op = o as IEnumerable<KeyValuePair<string, object>>;
+                return op.ToDictionary(k => k.Key, v => v.Value);
+            }
             PropertyInfo[] pi = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
             foreach (PropertyInfo p in pi)
@@ -28,12 +35,17 @@ namespace Idefav.Utility
 
                 if (mi != null && mi.IsPublic)
                 {
-                    map.Add(p.Name, mi.Invoke(o, new Object[] { }));
+                    map.Add(p.Name, mi.Invoke(o,null));
                 }
             }
 
             return map;
 
+        }
+
+        public static Dictionary<string, object> ListKvToDictionary(params KeyValuePair<string, object>[] kv)
+        {
+            return kv.ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
         }
     }
 }

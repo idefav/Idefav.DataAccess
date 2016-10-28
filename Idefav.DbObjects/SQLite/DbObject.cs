@@ -10,7 +10,7 @@ using Idefav.Utility;
 
 namespace Idefav.DbObjects.SQLite
 {
-    public class DbObject:IDbObject
+    public class DbObject
     {
         public string DbType => DBType.SQLite.ToString();
         public string DbConnectStr { get; set; }

@@ -59,10 +59,10 @@ namespace Idefav.DbObjects.SQLServer
         /// </summary>
         /// <param name="SQLString"></param>
         /// <returns></returns>
-        public int ExecuteSql(string SQLString)
-        {
-            return ExceuteSql(SQLString, null);
-        }
+        //public int ExecuteSql(string SQLString)
+        //{
+        //    return ExceuteSql(SQLString);
+        //}
 
         /// <summary>
         /// 执行SQL 支持事务提交
@@ -71,35 +71,25 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="transaction"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public int ExceuteSql(string sql, IDbTransaction transaction = null, params KeyValuePair<string, object>[] parameters)
+        protected int ExecuteSql(string sql, IDbTransaction transaction = null, Dictionary<string,object> parameters=null)
         {
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
                 sqlcmd.CommandText = sql;
 
                 if (parameters != null)
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 return sqlcmd.ExecuteNonQuery();
             }, transaction);
         }
 
-        public int ExceuteSql(string sql, IDbTransaction transaction = null, object parameters = null)
-        {
 
-            if (parameters.GetType() == typeof(Dictionary<string, object>))
-            {
-                return ExceuteSql(sql, transaction, ((Dictionary<string, object>) parameters).ToArray());
-            }
-            else if(parameters.GetType()==typeof(List<KeyValuePair<string,object>>))
-            {
-                return ExceuteSql(sql, transaction, parameters);
-            }
-            else
-            {
-                return ExceuteSql(sql, transaction, Common.ObjectToDictionary(parameters).ToArray());
-            }
+
+        public int ExecuteSql(string sql, IDbTransaction transaction = null, object parameters = null)
+        {
+            return ExecuteSql(sql, transaction, Common.ObjectToDictionary(parameters));
         }
 
         /// <summary>
@@ -107,7 +97,7 @@ namespace Idefav.DbObjects.SQLServer
         /// </summary>
         /// <param name="proc"></param>
         /// <returns></returns>
-        public bool ExceuteTrans(Func<IDbTransaction, bool> proc)
+        public bool ExecuteTrans(Func<IDbTransaction, bool> proc)
         {
             return DbConnect(conn =>
             {
@@ -150,7 +140,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="proc"></param>
         /// <param name="transaction"></param>
         /// <returns></returns>
-        public T DbExcute<T>(Func<IDbCommand, T> proc, IDbTransaction transaction = null)
+        public T DbExecute<T>(Func<IDbCommand, T> proc, IDbTransaction transaction = null)
         {
             if (transaction != null)
             {
@@ -174,15 +164,15 @@ namespace Idefav.DbObjects.SQLServer
 
         }
 
-        public DataSet Query(string SQLString, params KeyValuePair<string, object>[] parameters)
+        protected DataSet Query(string SQLString,  Dictionary<string, object> parameters)
         {
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
                 sqlcmd.CommandText = SQLString;
                 if (parameters != null)
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
                 adp.Fill(ds);
@@ -192,18 +182,18 @@ namespace Idefav.DbObjects.SQLServer
 
         public DataSet Query(string SQLString, object parameters = null)
         {
-            return Query(SQLString, Common.ObjectToDictionary(parameters).ToArray());
+            return Query(SQLString, Common.ObjectToDictionary(parameters));
         }
 
-        public DataTable QueryDataTable(string sql, params KeyValuePair<string, object>[] parameters)
+        protected DataTable QueryDataTable(string sql, Dictionary<string, object> parameters)
         {
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
                 sqlcmd.CommandText = sql;
                 if (parameters != null)
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
                 adp.Fill(ds);
@@ -213,15 +203,15 @@ namespace Idefav.DbObjects.SQLServer
 
         public DataTable QueryDataTable(string sql, object parameters = null)
         {
-            return QueryDataTable(sql, Common.ObjectToDictionary(parameters).ToArray());
+            return QueryDataTable(sql, Common.ObjectToDictionary(parameters));
         }
 
         public T QueryModel<T>(string sql, object parameters = null) where T : class, new()
         {
-            return QueryModel<T>(sql, Common.ObjectToDictionary(parameters).ToArray());
+            return QueryModel<T>(sql, Common.ObjectToDictionary(parameters));
         }
 
-        public List<T> QueryModels<T>(string sql, params KeyValuePair<string, object>[] parameters) where T : class, new()
+        protected List<T> QueryModels<T>(string sql, Dictionary<string, object> parameters) where T : class, new()
         {
             List<T> models = new List<T>();
             using (IDataReader dr = QueryDataReader(sql, parameters))
@@ -254,12 +244,12 @@ namespace Idefav.DbObjects.SQLServer
 
         public List<T> QueryModels<T>(string sql, object parameters = null) where T : class, new()
         {
-            return QueryModels<T>(sql, Common.ObjectToDictionary(parameters).ToArray());
+            return QueryModels<T>(sql, Common.ObjectToDictionary(parameters));
         }
 
-        public object ExecuteScalar(string sql, params KeyValuePair<string, object>[] parameters)
+        protected object ExecuteScalar(string sql, Dictionary<string, object> parameters=null)
         {
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
@@ -267,7 +257,7 @@ namespace Idefav.DbObjects.SQLServer
                 if (parameters != null)
                 {
                     sqlcmd.Parameters.Clear();
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 }
                 return sqlcmd.ExecuteScalar();
             });
@@ -275,7 +265,7 @@ namespace Idefav.DbObjects.SQLServer
 
         public object ExecuteScalar(string sql, object parameters = null)
         {
-            return ExecuteScalar(sql, Common.ObjectToDictionary(parameters).ToArray());
+            return ExecuteScalar(sql, Common.ObjectToDictionary(parameters));
         }
 
         /// <summary>
@@ -285,7 +275,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public T QueryModel<T>(string sql, params KeyValuePair<string, object>[] parameters) where T : class, new()
+        protected T QueryModel<T>(string sql,Dictionary<string, object> parameters) where T : class, new()
         {
             T model = new T();
             DataTable dt = QueryDataTable(sql, parameters);
@@ -313,7 +303,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="sql"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public IDataReader QueryDataReader(string sql, params KeyValuePair<string, object>[] parameters)
+        protected IDataReader QueryDataReader(string sql, Dictionary<string, object> parameters)
         {
             SqlConnection connection = new SqlConnection(DbConnectStr);
             connection.Open();
@@ -324,21 +314,21 @@ namespace Idefav.DbObjects.SQLServer
             if (parameters != null)
             {
                 cmd.Parameters.Clear();
-                cmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                cmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
             }
             return cmd.ExecuteReader(CommandBehavior.CloseConnection);
         }
 
         public IDataReader QueryDataReader(string sql, object parameters = null)
         {
-            return QueryDataReader(sql, Common.ObjectToDictionary(parameters).ToArray());
+            return QueryDataReader(sql, Common.ObjectToDictionary(parameters));
         }
 
         public DataTable QueryPageTableOffset(string sqlstr, int offset, int pageNo, int pageSize, out int count, string @orderby,
             OrderDirection direction = OrderDirection.DESC, string @select = "*", object parameters = null)
         {
             return QueryPageTableOffset(sqlstr, offset, pageNo, pageSize, out count, orderby, direction, select,
-                Common.ObjectToDictionary(parameters).ToArray());
+                Common.ObjectToDictionary(parameters));
         }
 
         /// <summary>
@@ -352,8 +342,8 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="count"></param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize,out int count,  string orderby,  string select = "*",
-            params KeyValuePair<string, object>[] parameters)
+        protected DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize,out int count,  string orderby,  string select = "*",
+            Dictionary<string, object> parameters=null)
         {
             StringBuilder qSql = new StringBuilder();
             StringBuilder sql = new StringBuilder();
@@ -368,7 +358,7 @@ namespace Idefav.DbObjects.SQLServer
             count = GetCount(sqlstr, parameters);
             qSql.Append(string.Format(sql.ToString(), sqlstr));
 
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
@@ -377,7 +367,7 @@ namespace Idefav.DbObjects.SQLServer
                 if (parameters != null)
                 {
                     sqlcmd.Parameters.Clear();
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 }
                 SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
@@ -390,7 +380,7 @@ namespace Idefav.DbObjects.SQLServer
             object parameters = null)
         {
             return QueryPageTable(sqlstr, pageNo, pageSize, out count, orderby, select,
-                Common.ObjectToDictionary(parameters).ToArray());
+                Common.ObjectToDictionary(parameters));
         }
 
         /// <summary>
@@ -405,8 +395,8 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="count"></param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize,out int count, string orderby, OrderDirection direction = OrderDirection.DESC, string select="*",
-            params KeyValuePair<string, object>[] parameters)
+        protected DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize,out int count, string orderby, OrderDirection direction = OrderDirection.DESC, string select="*",
+            Dictionary<string, object> parameters=null)
         {
             StringBuilder qSql = new StringBuilder();
             StringBuilder sql = new StringBuilder();
@@ -421,7 +411,7 @@ namespace Idefav.DbObjects.SQLServer
             count = GetCount(sqlstr, parameters);
             qSql.Append(string.Format(sql.ToString(), sqlstr));
 
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
@@ -430,7 +420,7 @@ namespace Idefav.DbObjects.SQLServer
                 if (parameters != null)
                 {
                     sqlcmd.Parameters.Clear();
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 }
                 SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
@@ -443,14 +433,14 @@ namespace Idefav.DbObjects.SQLServer
             OrderDirection direction, string @select, object parameters = null)
         {
             return QueryPageTable(sqlstr, pageNo, pageSize, out count, orderby, direction, select,
-                Common.ObjectToDictionary(parameters).ToArray());
+                Common.ObjectToDictionary(parameters));
         }
 
         public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string @orderby, OrderDirection direction,
             string @select, object parameters = null)
         {
             return QueryPageTable(sqlstr, pageNo, pageSize, orderby, direction, select,
-                Common.ObjectToDictionary(parameters).ToArray());
+                Common.ObjectToDictionary(parameters));
         }
 
         /// <summary>
@@ -466,8 +456,8 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="count"></param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public DataTable QueryPageTableOffset(string sqlstr,int offset, int pageNo, int pageSize, out int count, string orderby, OrderDirection direction = OrderDirection.DESC, string select = "*",
-           params KeyValuePair<string, object>[] parameters)
+        protected DataTable QueryPageTableOffset(string sqlstr,int offset, int pageNo, int pageSize, out int count, string orderby, OrderDirection direction = OrderDirection.DESC, string select = "*",
+           Dictionary<string, object> parameters=null)
         {
             StringBuilder qSql = new StringBuilder();
             StringBuilder sql = new StringBuilder();
@@ -482,7 +472,7 @@ namespace Idefav.DbObjects.SQLServer
             count = GetCount(sqlstr, parameters);
             qSql.Append(string.Format(sql.ToString(), sqlstr));
 
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
@@ -491,7 +481,7 @@ namespace Idefav.DbObjects.SQLServer
                 if (parameters != null)
                 {
                     sqlcmd.Parameters.Clear();
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 }
                 SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
@@ -511,8 +501,8 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="count"></param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select="*",
-            params KeyValuePair<string, object>[] parameters)
+        protected DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby, string select="*",
+            Dictionary<string, object> parameters=null)
         {
             StringBuilder qSql = new StringBuilder();
             StringBuilder sql = new StringBuilder();
@@ -527,7 +517,7 @@ namespace Idefav.DbObjects.SQLServer
             
             qSql.Append(string.Format(sql.ToString(), sqlstr));
 
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
@@ -536,7 +526,7 @@ namespace Idefav.DbObjects.SQLServer
                 if (parameters != null)
                 {
                     sqlcmd.Parameters.Clear();
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 }
                 SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
@@ -549,7 +539,7 @@ namespace Idefav.DbObjects.SQLServer
             object parameters = null)
         {
             return QueryPageTable(sqlstr, pageNo, pageSize, orderby, select,
-                Common.ObjectToDictionary(parameters).ToArray());
+                Common.ObjectToDictionary(parameters));
         }
 
 
@@ -565,8 +555,8 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="count"></param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby,OrderDirection direction=OrderDirection.DESC, string select = "*",
-            params KeyValuePair<string, object>[] parameters)
+        protected DataTable QueryPageTable(string sqlstr, int pageNo, int pageSize, string orderby,OrderDirection direction=OrderDirection.DESC, string select = "*",
+            Dictionary<string, object> parameters=null)
         {
             StringBuilder qSql = new StringBuilder();
             StringBuilder sql = new StringBuilder();
@@ -581,7 +571,7 @@ namespace Idefav.DbObjects.SQLServer
 
             qSql.Append(string.Format(sql.ToString(), sqlstr));
 
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
@@ -590,7 +580,7 @@ namespace Idefav.DbObjects.SQLServer
                 if (parameters != null)
                 {
                     sqlcmd.Parameters.Clear();
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 }
                 SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
@@ -611,8 +601,8 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="select">筛选</param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public DataTable QueryPageTableOffset(string sqlstr,int offset, int pageNo, int pageSize, string orderby, OrderDirection direction = OrderDirection.DESC, string select = "*",
-            params KeyValuePair<string, object>[] parameters)
+        protected DataTable QueryPageTableOffset(string sqlstr,int offset, int pageNo, int pageSize, string orderby, OrderDirection direction = OrderDirection.DESC, string select = "*",
+            Dictionary<string, object> parameters=null)
         {
             StringBuilder qSql = new StringBuilder();
             StringBuilder sql = new StringBuilder();
@@ -627,7 +617,7 @@ namespace Idefav.DbObjects.SQLServer
 
             qSql.Append(string.Format(sql.ToString(), sqlstr));
 
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
@@ -636,7 +626,7 @@ namespace Idefav.DbObjects.SQLServer
                 if (parameters != null)
                 {
                     sqlcmd.Parameters.Clear();
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 }
                 SqlDataAdapter adp = new SqlDataAdapter(sqlcmd);
                 DataSet ds = new DataSet();
@@ -649,14 +639,14 @@ namespace Idefav.DbObjects.SQLServer
             OrderDirection direction = OrderDirection.DESC, string @select = "*", object parameters = null)
         {
             return QueryPageTableOffset(sqlstr, offset, pageNo, pageSize, orderby, direction, select,
-                Common.ObjectToDictionary(parameters).ToArray());
+                Common.ObjectToDictionary(parameters));
         }
 
 
-        public int GetCount(string sql, params KeyValuePair<string, object>[] parameters)
+        public int GetCount(string sql, Dictionary<string, object> parameters=null)
         {
             string sqlcount = @"WITH TB1 as (" + sql + ") select COUNT(*) from TB1";
-            return DbExcute(cmd =>
+            return DbExecute(cmd =>
             {
                 SqlCommand sqlcmd = cmd as SqlCommand;
                 sqlcmd.CommandType = CommandType.Text;
@@ -664,7 +654,7 @@ namespace Idefav.DbObjects.SQLServer
                 if (parameters != null)
                 {
                     sqlcmd.Parameters.Clear();
-                    sqlcmd.Parameters.AddRange(MakeParams(parameters).ToArray());
+                    sqlcmd.Parameters.AddRange(MakeParams(parameters.ToArray()).ToArray());
                 }
                 return int.Parse(sqlcmd.ExecuteScalar().ToString());
             });
@@ -672,7 +662,7 @@ namespace Idefav.DbObjects.SQLServer
 
         public int GetCount(string sql, object parameters = null)
         {
-            return GetCount(sql, Common.ObjectToDictionary(parameters).ToArray());
+            return GetCount(sql, Common.ObjectToDictionary(parameters));
         }
 
         /// <summary>
@@ -698,14 +688,15 @@ namespace Idefav.DbObjects.SQLServer
                 string valuestr = string.Join(",", cti.Fields.Select(k => GetParameterName(k.Key)));
                 sql += string.Format(" ({0}) values ({1}) ", fieldstr, valuestr);
                 var parm = cti.Fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value));
-                result = ExceuteSql(sql, transaction, parm.ToArray()) > 0;
+                
+                result = ExecuteSql(sql, transaction, parm.ToDictionary(k => k.Key, v => v.Value)) > 0;
             }
 
             return result;
         }
 
-        public bool Insert<T>(T model, string where, IDbTransaction transaction = null,
-            params KeyValuePair<string, object>[] parameters)
+        protected bool Insert<T>(T model, string where, IDbTransaction transaction = null,
+            Dictionary<string, object> parameters=null)
         {
             ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
             string sql = string.Format(" insert {0} ", cti.TableName);
@@ -715,7 +706,7 @@ namespace Idefav.DbObjects.SQLServer
                 string valuestr = string.Join(",", cti.Fields.Select(k => GetParameterName(k.Key)));
                 sql += string.Format(" ({0}) values ({1}) ", fieldstr, valuestr);
                 var parm = cti.Fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value));
-                return ExceuteSql(sql, transaction, parm.ToArray()) > 0;
+                return ExecuteSql(sql, transaction, parm.ToDictionary(k => k.Key, v => v.Value)) > 0;
             }
             return false;
         }
@@ -746,13 +737,13 @@ namespace Idefav.DbObjects.SQLServer
                 sql += " where ";
                 sql += where;
                 param.AddRange(wherep);
-                return ExceuteSql(sql, transaction, param.ToArray()) > 0;
+                return ExecuteSql(sql, transaction, param.ToDictionary(k => k.Key, v => v.Value)) > 0;
             }
             return false;
         }
 
-        public bool Update(string fields, string where, string tableName, IDbTransaction transaction = null,
-            params KeyValuePair<string, object>[] parameters)
+        protected bool Update(string fields, string where, string tableName, IDbTransaction transaction = null,
+            Dictionary<string, object> parameters=null)
         {
 
             string sql = "";
@@ -771,12 +762,12 @@ namespace Idefav.DbObjects.SQLServer
 
             sql += " " + where;
 
-            return ExceuteSql(sql, transaction, parameters) > 0;
+            return ExecuteSql(sql, transaction, parameters) > 0;
         }
 
         public bool Update(string fields, string @where, string tableName, IDbTransaction transaction = null, object parameters = null)
         {
-            return Update(fields, where, tableName, transaction, Common.ObjectToDictionary(parameters).ToArray());
+            return Update(fields, where, tableName, transaction, Common.ObjectToDictionary(parameters));
         }
 
         /// <summary>
@@ -798,22 +789,22 @@ namespace Idefav.DbObjects.SQLServer
                     cti.PrimaryKeys.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value))
                         .ToArray();
                 sql += where;
-                return ExceuteSql(sql, transaction, parm.ToArray()) > 0;
+                return ExecuteSql(sql, transaction, parm.ToDictionary(k=>k.Key,v=>v.Value)) > 0;
             }
             return false;
 
         }
 
-        public bool Delete(string where, string tableName, IDbTransaction transaction = null, params KeyValuePair<string, object>[] parameters)
+        protected bool Delete(string where, string tableName, IDbTransaction transaction = null, Dictionary<string, object> parameters=null)
         {
             string sql = "delete from " + tableName + " ";
             sql += " " + where + " ";
-            return ExceuteSql(sql, transaction, parameters) > 0;
+            return ExecuteSql(sql, transaction, parameters) > 0;
         }
 
         public bool Delete(string @where, string tableName, IDbTransaction transaction = null, object parameters = null)
         {
-            return Delete(where, tableName, transaction, Common.ObjectToDictionary(parameters).ToArray());
+            return Delete(where, tableName, transaction, Common.ObjectToDictionary(parameters));
         }
 
         /// <summary>
@@ -845,7 +836,7 @@ namespace Idefav.DbObjects.SQLServer
                                 .ToList();
                     sql += where;
 
-                    return ((int)ExecuteScalar(sql, parameters.ToArray())) > 0;
+                    return ((int)ExecuteScalar(sql, parameters.ToDictionary(k=>k.Key,v=>v.Value))) > 0;
                 }
                 else
                 {
@@ -863,7 +854,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="tableName"></param>
         /// <param name="kv"></param>
         /// <returns></returns>
-        public bool IsExist(string where, string tableName, params KeyValuePair<string, object>[] kv)
+        protected bool IsExist(string where, string tableName, Dictionary<string, object> kv=null)
         {
             string sql = string.Format(" select count(*) from {0} ", tableName);
             sql += where;
@@ -873,7 +864,7 @@ namespace Idefav.DbObjects.SQLServer
 
         public bool IsExist(string @where, string tableName, object kv = null)
         {
-            return IsExist(where, tableName, Common.ObjectToDictionary(kv).ToArray());
+            return IsExist(where, tableName, Common.ObjectToDictionary(kv));
         }
 
         /// <summary>
@@ -883,6 +874,7 @@ namespace Idefav.DbObjects.SQLServer
         /// <returns></returns>
         public string GetParameterName(string name)
         {
+            if (name.Contains(Perfix)) return name;
             return string.Format("{1}{0}", name, Perfix);
         }
 
@@ -905,10 +897,7 @@ namespace Idefav.DbObjects.SQLServer
             return listParameters;
         }
 
-        public DbObject()
-        {
-
-        }
+        
     }
 
 

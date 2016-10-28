@@ -8,11 +8,11 @@ namespace Idefav.Test
     [TestClass]
     public class SQLServerUnitTest
     {
-        private string ConnStr = @"Data Source=.\SQL2008EX;Initial Catalog=DBTest;User Id=sa;Password=sa123;";
+        private string ConnStr = @"Data Source=139.196.39.76;Initial Catalog=DB_News;Persist Security Info=True;User ID=sa;Password=idefav20160523";
         [TestMethod]
         public void TestIsExist()
         {
-            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject(ConnStr);
             db.DbConnectStr = ConnStr;
             Assert.AreEqual(db.IsExist(new Student() { ID = 1 }), true);
 
@@ -21,7 +21,7 @@ namespace Idefav.Test
         [TestMethod]
         public void TestInsert()
         {
-            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject(ConnStr);
             db.DbConnectStr = ConnStr;
             Student student=new Student();
             student.ID = 4;
@@ -35,7 +35,7 @@ namespace Idefav.Test
             stu2.ClassName = "Class5";
             stu2.Score = 40;
             stu2.InTime = DateTime.Now;
-            Assert.AreEqual(db.ExceuteTrans(trans =>
+            Assert.AreEqual(db.ExecuteTrans(trans =>
             {
                 db.Insert(student, trans);
                 db.Insert(stu2, trans);
@@ -48,7 +48,7 @@ namespace Idefav.Test
         [TestMethod]
         public void TestUpdate()
         {
-            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject(ConnStr);
             db.DbConnectStr = ConnStr;
             Student student = db.QueryModel<Student>("select * from td_student where id=" + db.GetParameterName("id"),
                 new KeyValuePair<string, object>(db.GetParameterName("id"), 6));
@@ -63,7 +63,7 @@ namespace Idefav.Test
         [TestMethod]
         public void TestUpate2()
         {
-            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject(ConnStr);
             db.DbConnectStr = ConnStr;
 
             db.Update("sore="+db.GetParameterName("sore"), "where sore>=100", "students", null,new KeyValuePair<string, object>(db.GetParameterName("sore"),50));
@@ -85,7 +85,7 @@ namespace Idefav.Test
         [TestMethod]
         public void TestDelete()
         {
-            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject(ConnStr);
             db.DbConnectStr = ConnStr;
             Student student=new Student();
             student.ID = 6;
@@ -95,7 +95,7 @@ namespace Idefav.Test
         [TestMethod]
         public void TestDelete2()
         {
-            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject(ConnStr);
             db.DbConnectStr = ConnStr;
             Assert.AreEqual(db.Delete("where sore<" + db.GetParameterName("sore"), "students", null,
                 new KeyValuePair<string, object>(db.GetParameterName("sore"), 50)),true);
@@ -104,7 +104,7 @@ namespace Idefav.Test
         [TestMethod]
         public void TestQueryModels()
         {
-            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject();
+            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject(ConnStr);
             db.DbConnectStr = ConnStr;
             var models = db.QueryModels<Student>("select * from td_student");
             Assert.AreEqual(models.Count>0 ,true);

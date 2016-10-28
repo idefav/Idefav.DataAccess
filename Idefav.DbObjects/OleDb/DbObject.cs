@@ -10,7 +10,7 @@ using Idefav.Utility;
 
 namespace Idefav.DbObjects.OleDb
 {
-    public class DbObject:IDbObject
+    public class DbObject
     {
         public string DbType => DBType.OleDb.ToString();
         public string DbConnectStr { get; set; }

@@ -10,7 +10,7 @@ using MySql.Data.MySqlClient;
 
 namespace Idefav.DbObjects.MySQL
 {
-    public class DbObject : IDbObject
+    public class DbObject 
     {
         public string DbType => DBType.MySQL.ToString();
         public string DbConnectStr { get; set; }

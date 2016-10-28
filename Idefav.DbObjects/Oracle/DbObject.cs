@@ -11,7 +11,7 @@ using Oracle.DataAccess.Client;
 
 namespace Idefav.DbObjects.Oracle
 {
-    public class DbObject : IDbObject
+    public class DbObject 
     {
         public string DbType => DBType.Oracle.ToString();
 
