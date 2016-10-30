@@ -32,10 +32,10 @@ namespace Idefav.Utility
             foreach (PropertyInfo p in pi)
             {
                 MethodInfo mi = p.GetGetMethod();
-
                 if (mi != null && mi.IsPublic)
                 {
-                    map.Add(p.Name, mi.Invoke(o,null));
+                    var v = mi.Invoke(o, null);
+                    map.Add(p.Name, v ?? DBNull.Value);
                 }
             }
 

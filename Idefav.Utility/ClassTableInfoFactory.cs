@@ -35,30 +35,42 @@ namespace Idefav.Utility
                     if (cti.PrimaryKeys.Count(c => c.Key == propertyInfo.Name) <= 0)
                     {
                         cti.PrimaryKeys.Add(new KeyValuePair<string, object>(propertyInfo.Name,
-                            propertyInfo.GetValue(model, null)));
+                            propertyInfo.GetValue(model, null)??DBNull.Value));
                     }
                 }
                 // 自动增长
                 if (isAutoIncre)
                 {
-                    cti.AutoIncreFields.Add(new KeyValuePair<string, object>(propertyInfo.Name,
-                        propertyInfo.GetValue(model, null)));
-                    continue;
-                }
+                    string tableFieldName = tableField != null && !string.IsNullOrEmpty(tableField.FieldName)
+                        ? tableField.FieldName
+                        : propertyInfo.Name;
+                    object tableFieldValue = propertyInfo.GetValue(model, null) ?? DBNull.Value;
 
-                if (tableField != null)
+                    KeyValuePair<string, object> kv = new KeyValuePair<string, object>(tableFieldName, tableFieldValue);
+                    cti.AutoIncreFields.Add(kv);
+                    continue;
+                } 
+
+                if (tableField != null &&tableField.Include)
                 {
                     string tableFieldName = tableField != null && !string.IsNullOrEmpty(tableField.FieldName)
                         ? tableField.FieldName
                         : propertyInfo.Name;
-                    object tableFieldValue = propertyInfo.GetValue(model, null);
+                    object tableFieldValue = propertyInfo.GetValue(model, null)??DBNull.Value;
 
                     KeyValuePair<string, object> kv = new KeyValuePair<string, object>(tableFieldName, tableFieldValue);
                     cti.Fields.Add(kv);
 
                 }
+                else if(tableField==null)
+                {
+                    KeyValuePair<string, object> kv = new KeyValuePair<string, object>(propertyInfo.Name, propertyInfo.GetValue(model, null) ?? DBNull.Value);
+                    cti.Fields.Add(kv);
+                }
+                
                 else
                 {
+                    
                     continue;
                     
                 }

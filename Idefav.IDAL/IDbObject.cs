@@ -364,6 +364,14 @@ namespace Idefav.IDAL
         bool Insert<T>(T model, IDbTransaction transaction = null);
 
         /// <summary>
+        /// 不存在则插入,存在则更新
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="model"></param>
+        /// <param name="transaction"></param>
+        /// <returns></returns>
+        bool Upsert<T>(T model, IDbTransaction transaction = null);
+        /// <summary>
         /// 更新
         /// </summary>
         /// <typeparam name="T">模型类型</typeparam>
