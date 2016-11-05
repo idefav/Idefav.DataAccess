@@ -696,14 +696,16 @@ namespace Idefav.DbObjects.SQLServer
             return result;
         }
 
+
         /// <summary>
         /// 不存在则插入,存在则更新
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="model"></param>
         /// <param name="transaction"></param>
+        /// <param name="mode">字段空值更新模式(NoUpdate相当于模型没有这个字段,对数据库的这个字段不做更新;Update会将字段为DBNULL)</param>
         /// <returns></returns>
-        public bool Upsert<T>(T model, IDbTransaction transaction = null)
+        public bool Upsert<T>(T model, IDbTransaction transaction = null,UpdateMode mode=UpdateMode.NoUpdate)
         {
             bool result = false;
             ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
@@ -725,7 +727,20 @@ namespace Idefav.DbObjects.SQLServer
                     string sql = "";
                     sql += "update " + cti.TableName;
                     sql += " set ";
-                    string fields = string.Join(",", cti.Fields.Where(c=>c.Value!=DBNull.Value).Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                    string fields = "";
+                    if (mode == UpdateMode.NoUpdate)
+                    {
+                        fields=string.Join(",", cti.Fields.Where(c => c.Value != DBNull.Value).Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                    }
+                    else if (mode == UpdateMode.Update)
+                    {
+                        fields = string.Join(",", cti.Fields.Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                    }
+                    else
+                    {
+                        fields = string.Join(",", cti.Fields.Where(c => c.Value != DBNull.Value).Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                    }
+
                     var param =
                         cti.Fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value)).ToList();
                     sql += fields;
@@ -760,14 +775,16 @@ namespace Idefav.DbObjects.SQLServer
 
 
 
+
         /// <summary>
         /// 修改
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="model"></param>
         /// <param name="transaction"></param>
+        /// <param name="mode">字段空值更新模式(NoUpdate相当于模型没有这个字段,对数据库的这个字段不做更新;Update会将字段为DBNULL)</param>
         /// <returns></returns>
-        public bool Update<T>(T model, IDbTransaction transaction = null)
+        public bool Update<T>(T model, IDbTransaction transaction = null,UpdateMode mode=UpdateMode.NoUpdate)
         {
             ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
             if (cti.PrimaryKeys.Count > 0)
@@ -775,7 +792,19 @@ namespace Idefav.DbObjects.SQLServer
                 string sql = "";
                 sql += "update " + cti.TableName;
                 sql += " set ";
-                string fields = string.Join(",", cti.Fields.Where(c=>c.Value!=DBNull.Value).Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                string fields = "";
+                if (mode == UpdateMode.NoUpdate)
+                {
+                    fields = string.Join(",", cti.Fields.Where(c => c.Value != DBNull.Value).Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                }
+                else if (mode == UpdateMode.Update)
+                {
+                    fields = string.Join(",", cti.Fields.Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                }
+                else
+                {
+                    fields = string.Join(",", cti.Fields.Where(c => c.Value != DBNull.Value).Select(k => k.Key + "=" + GetParameterName(k.Key)));
+                }
                 var param =
                     cti.Fields.Select(k => new KeyValuePair<string, object>(GetParameterName(k.Key), k.Value)).ToList();
                 sql += fields;

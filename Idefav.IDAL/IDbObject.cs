@@ -369,16 +369,18 @@ namespace Idefav.IDAL
         /// <typeparam name="T"></typeparam>
         /// <param name="model"></param>
         /// <param name="transaction"></param>
+        /// <param name="mode">字段空值更新模式(NoUpdate相当于模型没有这个字段,对数据库的这个字段不做更新;Update会将字段为DBNULL)</param>
         /// <returns></returns>
-        bool Upsert<T>(T model, IDbTransaction transaction = null);
+        bool Upsert<T>(T model, IDbTransaction transaction = null, UpdateMode mode = UpdateMode.NoUpdate);
         /// <summary>
         /// 更新
         /// </summary>
         /// <typeparam name="T">模型类型</typeparam>
         /// <param name="model">模型</param>
         /// <param name="transaction">事务</param>
+        /// <param name="mode">字段空值更新模式(NoUpdate相当于模型没有这个字段,对数据库的这个字段不做更新;Update会将字段为DBNULL)</param>
         /// <returns></returns>
-        bool Update<T>(T model, IDbTransaction transaction = null);
+        bool Update<T>(T model, IDbTransaction transaction = null, UpdateMode mode = UpdateMode.NoUpdate);
 
         /// <summary>
         /// 更新

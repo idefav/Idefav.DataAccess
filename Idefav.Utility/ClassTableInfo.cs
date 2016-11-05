@@ -85,5 +85,14 @@ namespace Idefav.Utility
                 return "";
             }
         }
+
+    }
+
+    /// <summary>
+    /// 更新模式
+    /// </summary>
+    public enum UpdateMode
+    {
+        NoUpdate,Update
     }
 }
