@@ -361,17 +361,18 @@ namespace Idefav.IDAL
         /// <param name="model">模型</param>
         /// <param name="transaction">事务</param>
         /// <returns></returns>
-        bool Insert<T>(T model, IDbTransaction transaction = null);
+        bool Insert<T>(T model,string tablename=null, IDbTransaction transaction = null);
 
         /// <summary>
         /// 不存在则插入,存在则更新
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="model"></param>
+        /// <param name="tablename">数据库表名</param>
         /// <param name="transaction"></param>
         /// <param name="mode">字段空值更新模式(NoUpdate相当于模型没有这个字段,对数据库的这个字段不做更新;Update会将字段为DBNULL)</param>
         /// <returns></returns>
-        bool Upsert<T>(T model, IDbTransaction transaction = null, UpdateMode mode = UpdateMode.NoUpdate);
+        bool Upsert<T>(T model,string tablename=null, IDbTransaction transaction = null, UpdateMode mode = UpdateMode.NoUpdate);
         /// <summary>
         /// 更新
         /// </summary>
@@ -380,7 +381,7 @@ namespace Idefav.IDAL
         /// <param name="transaction">事务</param>
         /// <param name="mode">字段空值更新模式(NoUpdate相当于模型没有这个字段,对数据库的这个字段不做更新;Update会将字段为DBNULL)</param>
         /// <returns></returns>
-        bool Update<T>(T model, IDbTransaction transaction = null, UpdateMode mode = UpdateMode.NoUpdate);
+        bool Update<T>(T model,string tablename="", IDbTransaction transaction = null, UpdateMode mode = UpdateMode.NoUpdate);
 
         /// <summary>
         /// 更新
@@ -413,7 +414,7 @@ namespace Idefav.IDAL
         /// <param name="model">模型</param>
         /// <param name="transaction">事务</param>
         /// <returns></returns>
-        bool Delete<T>(T model, IDbTransaction transaction = null);
+        bool Delete<T>(T model,string tablename="", IDbTransaction transaction = null);
 
         /// <summary>
         /// 删除
@@ -442,7 +443,7 @@ namespace Idefav.IDAL
         /// <param name="model">模型</param>
         /// <param name="ignoreAutoIm">是否忽略自动增长字段</param>
         /// <returns></returns>
-        bool IsExist<T>(T model, bool ignoreAutoIm = false);
+        bool IsExist<T>(T model,string tablename="", bool ignoreAutoIm = false);
 
         /// <summary>
         /// 是否存在

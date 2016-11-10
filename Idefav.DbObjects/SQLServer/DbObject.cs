@@ -164,7 +164,7 @@ namespace Idefav.DbObjects.SQLServer
 
         }
 
-        protected DataSet Query(string SQLString, Dictionary<string, object> parameters)
+        protected DataSet Query(string SQLString, Dictionary<string, object> parameters,IDbTransaction transaction)
         {
             return DbExecute(cmd =>
             {
@@ -177,7 +177,7 @@ namespace Idefav.DbObjects.SQLServer
                 DataSet ds = new DataSet();
                 adp.Fill(ds);
                 return ds;
-            });
+            },transaction);
         }
 
         public DataSet Query(string SQLString, object parameters = null)
@@ -673,17 +673,19 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="model"></param>
         /// <param name="transaction">事务</param>
         /// <returns></returns>
-        public bool Insert<T>(T model, IDbTransaction transaction = null)
+        public bool Insert<T>(T model,string tablename="", IDbTransaction transaction = null)
         {
             bool result = false;
             List<KeyValuePair<string, object>> primarykeys = new List<KeyValuePair<string, object>>();
-
+           
 
             ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
-            string sql = string.Format(" insert {0} ", cti.TableName);
+            string tableName = string.IsNullOrEmpty(tablename) ? cti.TableName : tablename;
+
+           string sql = string.Format(" insert {0} ", tableName);
 
             // 判断记录是否存在
-            if (!IsExist(model, true))
+            if (!IsExist(model,tableName,ignoreAutoIm: true))
             {
                 string fieldstr = string.Join(",", cti.Fields.Select(k => k.Key));
                 string valuestr = string.Join(",", cti.Fields.Select(k => GetParameterName(k.Key)));
@@ -702,17 +704,19 @@ namespace Idefav.DbObjects.SQLServer
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="model"></param>
+        /// <param name="tablename"></param>
         /// <param name="transaction"></param>
         /// <param name="mode">字段空值更新模式(NoUpdate相当于模型没有这个字段,对数据库的这个字段不做更新;Update会将字段为DBNULL)</param>
         /// <returns></returns>
-        public bool Upsert<T>(T model, IDbTransaction transaction = null,UpdateMode mode=UpdateMode.NoUpdate)
+        public bool Upsert<T>(T model,string tablename="", IDbTransaction transaction = null,UpdateMode mode=UpdateMode.NoUpdate)
         {
             bool result = false;
             ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
+            string tableName = string.IsNullOrEmpty(tablename) ? cti.TableName : tablename;
             // 判断是否存在
-            if (!IsExist(model, false))
+            if (!IsExist(model,tableName, false))
             {
-                string sql = string.Format(" insert {0} ", cti.TableName);
+                string sql = string.Format(" insert {0} ", tableName);
                 string fieldstr = string.Join(",", cti.Fields.Select(k => k.Key));
                 string valuestr = string.Join(",", cti.Fields.Select(k => GetParameterName(k.Key)));
                 sql += string.Format(" ({0}) values ({1}) ", fieldstr, valuestr);
@@ -725,7 +729,7 @@ namespace Idefav.DbObjects.SQLServer
                 if (cti.PrimaryKeys.Count > 0)
                 {
                     string sql = "";
-                    sql += "update " + cti.TableName;
+                    sql += "update " + tableName;
                     sql += " set ";
                     string fields = "";
                     if (mode == UpdateMode.NoUpdate)
@@ -784,13 +788,14 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="transaction"></param>
         /// <param name="mode">字段空值更新模式(NoUpdate相当于模型没有这个字段,对数据库的这个字段不做更新;Update会将字段为DBNULL)</param>
         /// <returns></returns>
-        public bool Update<T>(T model, IDbTransaction transaction = null,UpdateMode mode=UpdateMode.NoUpdate)
+        public bool Update<T>(T model,string tablename="", IDbTransaction transaction = null,UpdateMode mode=UpdateMode.NoUpdate)
         {
             ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
+            string tableName = string.IsNullOrEmpty(tablename) ? cti.TableName : tablename;
             if (cti.PrimaryKeys.Count > 0)
             {
                 string sql = "";
-                sql += "update " + cti.TableName;
+                sql += "update " + tableName;
                 sql += " set ";
                 string fields = "";
                 if (mode == UpdateMode.NoUpdate)
@@ -855,12 +860,13 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="model"></param>
         /// <param name="transaction"></param>
         /// <returns></returns>
-        public bool Delete<T>(T model, IDbTransaction transaction = null)
+        public bool Delete<T>(T model,string tablename="", IDbTransaction transaction = null)
         {
             ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
+            string tableName = string.IsNullOrEmpty(tablename) ? cti.TableName : tablename;
             if (cti.PrimaryKeys.Count > 0)
             {
-                string sql = "delete from " + cti.TableName;
+                string sql = "delete from " + tableName;
                 sql += " where ";
                 string where = string.Join(" AND ", cti.PrimaryKeys.Select(k => k.Key + "=" + GetParameterName(k.Key)));
                 var parm =
@@ -892,12 +898,13 @@ namespace Idefav.DbObjects.SQLServer
         /// <param name="model"></param>
         /// <param name="ignoreAutoIm">忽略自动增长主键</param>
         /// <returns></returns>
-        public bool IsExist<T>(T model, bool ignoreAutoIm = false)
+        public bool IsExist<T>(T model,string tablename="", bool ignoreAutoIm = false)
         {
             ClassTableInfo cti = ClassTableInfoFactory.CreateClassTableInfo(model, Perfix);
+            string tableName = string.IsNullOrEmpty(tablename) ? cti.TableName : tablename;
             if (cti.PrimaryKeys.Count > 0)
             {
-                string sql = string.Format(" select count(*) from {0} ", cti.TableName);
+                string sql = string.Format(" select count(*) from {0} ", tableName);
                 sql += " where ";
                 var filterkeys = cti.PrimaryKeys;
                 if (ignoreAutoIm)
