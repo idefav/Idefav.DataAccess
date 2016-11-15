@@ -278,7 +278,7 @@ namespace Idefav.DbObjects.SQLServer
         protected T QueryModel<T>(string sql, Dictionary<string, object> parameters) where T : class, new()
         {
             T model = new T();
-            DataTable dt = QueryDataTable(sql, parameters);
+            //DataTable dt = QueryDataTable(sql, parameters);
             using (IDataReader dr = QueryDataReader(sql, parameters))
             {
                 while (dr.Read())

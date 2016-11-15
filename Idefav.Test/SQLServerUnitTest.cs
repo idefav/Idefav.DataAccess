@@ -21,27 +21,27 @@ namespace Idefav.Test
         [TestMethod]
         public void TestInsert()
         {
-            DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject(ConnStr);
-            db.DbConnectStr = ConnStr;
-            Student student=new Student();
-            student.ID = 4;
-            student.StudentName = "Student4";
-            student.ClassName = "Class4";
-            student.Score = 30;
-            student.InTime=DateTime.Now;
-            Student stu2=new Student();
-            stu2.ID = 4; 
-            stu2.StudentName = "stu5";
-            stu2.ClassName = "Class5";
-            stu2.Score = 40;
-            stu2.InTime = DateTime.Now;
-            Assert.AreEqual(db.ExecuteTrans(trans =>
-            {
-                db.Insert(student, trans);
-                db.Insert(stu2, trans);
+            //DbObjects.SQLServer.DbObject db = new DbObjects.SQLServer.DbObject(ConnStr);
+            //db.DbConnectStr = ConnStr;
+            //Student student=new Student();
+            //student.ID = 4;
+            //student.StudentName = "Student4";
+            //student.ClassName = "Class4";
+            //student.Score = 30;
+            //student.InTime=DateTime.Now;
+            //Student stu2=new Student();
+            //stu2.ID = 4; 
+            //stu2.StudentName = "stu5";
+            //stu2.ClassName = "Class5";
+            //stu2.Score = 40;
+            //stu2.InTime = DateTime.Now;
+            //Assert.AreEqual(db.ExecuteTrans(trans =>
+            //{
+            //    db.Insert(student, trans);
+            //    db.Insert(stu2, trans);
                 
-                return true;
-            }),true);
+            //    return true;
+            //}),true);
             //Assert.AreEqual(db.Insert(student),true);
         }
 
