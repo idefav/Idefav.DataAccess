@@ -16,6 +16,7 @@ namespace Idefav.Utility
         /// <returns></returns>  
         public static Dictionary<String, Object> ObjectToDictionary(Object o)
         {
+            if (o == null) return new Dictionary<string, object>();
             Dictionary<String, Object> map = new Dictionary<string, object>();
 
             Type t = o.GetType();
