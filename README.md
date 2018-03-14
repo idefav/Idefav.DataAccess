@@ -7,7 +7,7 @@
 public enum DBType
   {
     SQLServer = 1,
-    MySQL = 2,
+    MySQL = 2, 
     OleDb = 3,
     Oracle = 4,
     SQLite = 5,
